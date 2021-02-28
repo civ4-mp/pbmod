@@ -3090,8 +3090,9 @@ class CvMainInterface:
 		self.iScoreRows = max(1,min(self.iScoreRows, nRows))
 		iHeight = min(yResolution - 300, self.iScoreRows * 24 + 2)
 		#screen.enableSelect("ScoreForeground", False)
+		iRow = -1
 		for iPlayer in lPlayers:
-			iRow = iPlayer # + 1 # screen.appendTableRow("ScoreForeground")
+			iRow += 1 # iRow = screen.appendTableRow("ScoreForeground")
 			pPlayer = gc.getPlayer(iPlayer)
 			iTeam = pPlayer.getTeam()
 			pTeam = gc.getTeam(iTeam)
