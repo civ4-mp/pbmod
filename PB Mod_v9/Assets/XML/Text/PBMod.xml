@@ -242,6 +242,30 @@
 		<Spanish>&#161;Empezar!</Spanish>
 	</TEXT>
 	<TEXT>
+		<Tag>TXT_KEY_TERRAIN_COAST</Tag>
+		<English>Coast</English>
+		<French>
+			<Text>C&#244;te</Text>
+			<Gender>Female</Gender>
+			<Plural>0</Plural>
+		</French>
+		<German>
+			<Text>K&#252;ste</Text>
+			<Gender>Male</Gender>
+			<Plural>0</Plural>
+		</German>
+		<Italian>
+			<Text>Costa:Coste</Text>
+			<Gender>Female</Gender>
+			<Plural>0:1</Plural>
+		</Italian>
+		<Spanish>
+			<Text>Costa:Costas</Text>
+			<Gender>Female</Gender>
+			<Plural>0:1</Plural>
+		</Spanish>
+	</TEXT>
+	<TEXT>
 		<Tag>TXT_KEY_MOD_</Tag>
 		<English></English>
 		<French></French>
