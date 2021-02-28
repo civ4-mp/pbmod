@@ -1065,7 +1065,7 @@ class CvMainInterface:
 		yResolution = screen.getYResolution()
 
 		bHandled = False
-		if ( CyInterface().shouldDisplayUnitModel() and CyEngine().isGlobeviewUp() == false and CyInterface().getShowInterface() != InterfaceVisibility.INTERFACE_HIDE_ALL ):
+		if ( CyInterface().shouldDisplayUnitModel() and CyEngine().isGlobeviewUp() == False and CyInterface().getShowInterface() != InterfaceVisibility.INTERFACE_HIDE_ALL ):
 			if ( CyInterface().isCitySelection() ):
 
 				iOrders = CyInterface().getNumOrdersQueued()
@@ -1662,7 +1662,7 @@ class CvMainInterface:
 								szName = "FreeSpecialist" + str(iCount)
 								screen.setImageButton( szName, gc.getSpecialistInfo(i).getTexture(), (xResolution - 74  - (26 * iCount)), yResolution - 206, 24, 24, WidgetTypes.WIDGET_FREE_CITIZEN, i, 1 )
 								screen.show( szName )
-								bHandled = true
+								bHandled = True
 							iCount += 1
 
 				else:
@@ -1672,7 +1672,7 @@ class CvMainInterface:
 								szName = "FreeSpecialist" + str(iCount)
 								screen.setImageButton( szName, gc.getSpecialistInfo(i).getTexture(), (xResolution - 74  - (26 * iCount)), yResolution - 206, 24, 24, WidgetTypes.WIDGET_FREE_CITIZEN, i, -1 )
 								screen.show( szName )
-								bHandled = true
+								bHandled = True
 
 							iCount = iCount + 1
 
@@ -2499,12 +2499,12 @@ class CvMainInterface:
 					screen.setHitTest( "GreatPeopleText", HitTestTypes.HITTEST_NOHIT )
 					screen.show( "GreatPeopleText" )
 
-					iFirst = float(pHeadSelectedCity.getGreatPeopleProgress()) / float( gc.getPlayer( pHeadSelectedCity.getOwner() ).greatPeopleThreshold(false) )
+					iFirst = float(pHeadSelectedCity.getGreatPeopleProgress()) / float( gc.getPlayer( pHeadSelectedCity.getOwner() ).greatPeopleThreshold(False) )
 					screen.setBarPercentage( "GreatPeopleBar", InfoBarTypes.INFOBAR_STORED, iFirst )
 					if ( iFirst == 1 ):
-						screen.setBarPercentage( "GreatPeopleBar", InfoBarTypes.INFOBAR_RATE, ( float(pHeadSelectedCity.getGreatPeopleRate()) / float( gc.getPlayer( pHeadSelectedCity.getOwner() ).greatPeopleThreshold(false) ) ) )
+						screen.setBarPercentage( "GreatPeopleBar", InfoBarTypes.INFOBAR_RATE, ( float(pHeadSelectedCity.getGreatPeopleRate()) / float( gc.getPlayer( pHeadSelectedCity.getOwner() ).greatPeopleThreshold(False) ) ) )
 					else:
-						screen.setBarPercentage( "GreatPeopleBar", InfoBarTypes.INFOBAR_RATE, ( ( float(pHeadSelectedCity.getGreatPeopleRate()) / float( gc.getPlayer( pHeadSelectedCity.getOwner() ).greatPeopleThreshold(false) ) ) ) / ( 1 - iFirst ) )
+						screen.setBarPercentage( "GreatPeopleBar", InfoBarTypes.INFOBAR_RATE, ( ( float(pHeadSelectedCity.getGreatPeopleRate()) / float( gc.getPlayer( pHeadSelectedCity.getOwner() ).greatPeopleThreshold(False) ) ) ) / ( 1 - iFirst ) )
 					screen.show( "GreatPeopleBar" )
 
 				iFirst = float(pHeadSelectedCity.getCultureTimes100(pHeadSelectedCity.getOwner())) / float(100 * pHeadSelectedCity.getCultureThreshold())
@@ -2799,7 +2799,7 @@ class CvMainInterface:
 		iBtnHeight = 22
 
 		if ((CyInterface().getShowInterface() != InterfaceVisibility.INTERFACE_HIDE_ALL and CyInterface().getShowInterface() != InterfaceVisibility.INTERFACE_MINIMAP_ONLY)):
-			if (CyInterface().isScoresVisible() and not CyInterface().isCityScreenUp() and CyEngine().isGlobeviewUp() == false):
+			if (CyInterface().isScoresVisible() and not CyInterface().isCityScreenUp() and CyEngine().isGlobeviewUp() == False):
 
 				i = gc.getMAX_CIV_TEAMS() - 1
 				while (i > -1):
@@ -2854,7 +2854,7 @@ class CvMainInterface:
 												szTempBuffer = u"%c" %(gc.getCommerceInfo(CommerceTypes.COMMERCE_ESPIONAGE).getChar())
 												szBuffer = szBuffer + szTempBuffer
 
-										bEspionageCanSeeResearch = false
+										bEspionageCanSeeResearch = False
 										for iMissionLoop in range(gc.getNumEspionageMissionInfos()):
 											if (gc.getEspionageMissionInfo(iMissionLoop).isSeeResearch()):
 												bEspionageCanSeeResearch = gc.getPlayer(gc.getGame().getActivePlayer()).canDoEspionageMission(iMissionLoop, ePlayer, None, -1)
@@ -3022,7 +3022,7 @@ class CvMainInterface:
 			#sText1 += u"<color=%d,%d,%d,%d>%d</color>" %(pPlayer.getPlayerTextColorR(), pPlayer.getPlayerTextColorG(), pPlayer.getPlayerTextColorB(), pPlayer.getPlayerTextColorA(), CyGame().getPlayerScore(iPlayer)) + u"</font>"
 			sText1 += u"%d" %( CyGame().getPlayerScore(iPlayer)) + u"</font>"
 			screen.setTableText("ScoreForeground", 0, iRow, sText1, "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_RIGHT_JUSTIFY)
-			bEspionageCanSeeResearch = false
+			bEspionageCanSeeResearch = False
 			for iMissionLoop in xrange(gc.getNumEspionageMissionInfos()):
 				if (gc.getEspionageMissionInfo(iMissionLoop).isSeeResearch()):
 					bEspionageCanSeeResearch = gc.getPlayer(CyGame().getActivePlayer()).canDoEspionageMission(iMissionLoop, iPlayer, None, -1)
@@ -3148,7 +3148,7 @@ class CvMainInterface:
 			#sText1 += u"<color=%d,%d,%d,%d>%d</color>" %(pPlayer.getPlayerTextColorR(), pPlayer.getPlayerTextColorG(), pPlayer.getPlayerTextColorB(), pPlayer.getPlayerTextColorA(), CyGame().getPlayerScore(iPlayer)) + u"</font>"
 			sText1 += u"%d" %( CyGame().getPlayerScore(iPlayer)) + u"</font>"
 			screen.setTableText("ScoreForeground", 0, iRow, sText1, "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_RIGHT_JUSTIFY)
-			bEspionageCanSeeResearch = false
+			bEspionageCanSeeResearch = False
 			for iMissionLoop in xrange(gc.getNumEspionageMissionInfos()):
 				if (gc.getEspionageMissionInfo(iMissionLoop).isSeeResearch()):
 					bEspionageCanSeeResearch = gc.getPlayer(CyGame().getActivePlayer()).canDoEspionageMission(iMissionLoop, iPlayer, None, -1)
