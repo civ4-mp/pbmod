@@ -302,6 +302,7 @@ public:
 	int getTradeRoutes();
 	int getConversionTimer();
 	int getRevolutionTimer();
+	void changeRevolutionTimer(int iChange);
 
 	bool isStateReligion();
 	bool isNoNonStateReligionSpread();
@@ -500,6 +501,7 @@ public:
 	bool canHaveTradeRoutesWith(int iPlayer);
 
 	void forcePeace(int iPlayer);
+	void setTurnActive(bool bNewValue);
 
 private:
 	CvPlayer* m_pPlayer;

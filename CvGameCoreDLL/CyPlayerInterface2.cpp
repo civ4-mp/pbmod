@@ -60,5 +60,6 @@ void CyPlayerPythonInterface2(python::class_<CyPlayer>& x)
 		.def("canSplitArea", &CyPlayer::canSplitArea, "bool (int iAreaId)")
 		.def("canHaveTradeRoutesWith", &CyPlayer::canHaveTradeRoutesWith, "bool (int iPlayer)")
 		.def("forcePeace", &CyPlayer::forcePeace, "void  (int iPlayer)")
+		.def("setTurnActive", &CyPlayer::setTurnActive, "void  (bool bNewValue)")
 		;
 }

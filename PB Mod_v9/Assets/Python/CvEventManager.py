@@ -40,6 +40,7 @@ iPlayerOptionCheck = 0  # Triggers for == 1, decrements for >= 0
 class CvEventManager:
     def __init__(self):
         self.bGameTurnProcessing = False
+        self.latestPlayerEndsTurn = 0  # Used to find latest human player before turn ends
         self.pbServerChatMessage = ""
         #################### ON EVENT MAP ######################
         #print "EVENTMANAGER INIT"
@@ -451,6 +452,10 @@ class CvEventManager:
         'Called at the beginning of the end of each turn'
         iGameTurn = argsList[0]
         CvTopCivs.CvTopCivs().turnChecker(iGameTurn)
+
+        # PBMod: Backup game before new turn starts.
+        genEndTurnSave(iGameTurn, self.latestPlayerEndsTurn)
+
         self.bGameTurnProcessing = True
 
     def onEndGameTurn(self, argsList):
@@ -461,6 +466,9 @@ class CvEventManager:
     def onBeginPlayerTurn(self, argsList):
         'Called at the beginning of a players turn'
         iGameTurn, iPlayer = argsList
+
+        if gc.getPlayer(iPlayer).isHuman():
+            self.latestPlayerEndsTurn = iPlayer
 
     def onEndPlayerTurn(self, argsList):
         'Called at the end of a players turn'
@@ -1237,3 +1245,45 @@ def check_show_ressources():
         CvUtil.pyPrint('toggle resource symbols on')
         bResourceOn = ControlTypes.CONTROL_RESOURCE_ALL + 1001
         CyGame().doControlWithoutWidget(bResourceOn)  # Ctrl+r
+
+def genEndTurnSave(iGameTurn, iPlayerTurnActive):
+    # To creates a save shortly before the turn ends
+
+    if not CyGame().isPitbossHost():
+        return
+
+    altroot = gc.getAltrootDir()
+    filename = "%s\\Saves\\multi\\auto\\EndSave_T%i.CivBeyondSwordSave" % (altroot, iGameTurn,)
+    PB = CyPitboss()
+    PB.consoleOut("Save '" + filename + "' ...")
+
+    # Backup current state
+    td = PB.getTurnTimeLeft()  # Simply 0!? No, timer of next round will be returned instead of 0
+    iP = CyGame().getPausePlayer()  # -1
+    #PB.consoleOut("Timer is %d " % (td,))
+
+    # Minimal bound of timer in save
+    tdMax = CyGame().getPitbossTurnTime() * 3600 * 4 - 1
+    # PB.consoleOut("Compare timers: " + str(td) + ", " + str(tdMax))
+    if td < 60 * 4 or td == tdMax:
+        timer_change = 60 * 4 - td  # One minute
+    else:
+        timer_change = 0
+
+    # Avoid turn change on reload
+    gc.getPlayer(iPlayerTurnActive).setTurnActive(True)
+    CyGame().setPausePlayer(iPlayerTurnActive)
+    if PB.getTurnTimer():
+        CyGame().incrementTurnTimer(timer_change)
+
+    # Save paused game
+    PB.save(filename)
+
+    # Restore current state
+    if PB.getTurnTimer():
+        CyGame().incrementTurnTimer(-timer_change)
+
+    CyGame().setPausePlayer(iP)
+    gc.getPlayer(iPlayerTurnActive).setTurnActive(False)
+
+    PB.consoleOut("Done")

@@ -1279,6 +1279,12 @@ int CyPlayer::getRevolutionTimer()
 	return m_pPlayer ? m_pPlayer->getRevolutionTimer() : -1;
 }
 
+void CyPlayer::changeRevolutionTimer(int iChange)
+{
+	if (m_pPlayer) 
+		m_pPlayer->changeRevolutionTimer(iChange);
+}
+
 bool CyPlayer::isStateReligion()
 {
 	return m_pPlayer ? m_pPlayer->isStateReligion() : false;
@@ -2239,4 +2245,9 @@ void  CyPlayer::forcePeace(int iPlayer)
 {
 	if (m_pPlayer)
 		m_pPlayer->forcePeace((PlayerTypes)iPlayer);
+}
+
+void CyPlayer::setTurnActive(bool bNewValue){
+	if (m_pPlayer)
+		m_pPlayer->setTurnActive(bNewValue, false);
 }

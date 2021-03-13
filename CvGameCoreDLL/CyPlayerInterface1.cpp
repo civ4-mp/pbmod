@@ -289,6 +289,7 @@ void CyPlayerPythonInterface1(python::class_<CyPlayer>& x)
 		.def("getTradeRoutes", &CyPlayer::getTradeRoutes, "int ()")
 		.def("getConversionTimer", &CyPlayer::getConversionTimer, "int ()")
 		.def("getRevolutionTimer", &CyPlayer::getRevolutionTimer, "int ()")
+		.def("changeRevolutionTimer", &CyPlayer::changeRevolutionTimer, "void (int iChange)")
 
 		.def("isStateReligion", &CyPlayer::isStateReligion, "bool ()")
 		.def("isNoNonStateReligionSpread", &CyPlayer::isNoNonStateReligionSpread, "bool ()")
