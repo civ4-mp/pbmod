@@ -13,6 +13,10 @@
 
 #define PBMOD_FRAME_POINTER_ENABLED 1
 #define DISALLOW_LOCAL_LOADING_OF_PB 1
+
+#ifdef PBMOD_FRAME_POINTER_ENABLED
+#define CHECK_MOD_VERSION_ON_LOGIN 1
+#endif
 // Public Functions...
 
 //PB Mod, to fix crash in BASE use static variables instead of member variables in CvInitCore.

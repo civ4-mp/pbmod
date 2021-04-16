@@ -772,6 +772,15 @@ bool CyGame::isMPOption(int /*MultiplayerOptionTypes*/ eIndex)
 	return m_pGame ? m_pGame->isMPOption((MultiplayerOptionTypes)eIndex) : -1;
 }
 
+void CyGame::setMPOption(int /*MultiplayerOptionTypes*/ eIndex, bool bEnabled)
+{
+  if( !isPitbossHost() ){
+		return;
+	}
+	if (m_pGame)
+		m_pGame->setMPOption((MultiplayerOptionTypes)eIndex, bEnabled);
+}
+
 bool CyGame::isForcedControl(int /*ForceControlTypes*/ eIndex)
 {
 	return m_pGame ? m_pGame->isForcedControl((ForceControlTypes)eIndex) : -1;
@@ -1219,19 +1228,21 @@ void CyGame::sendTurnCompletePB(int iPlayer){
 	}
 }
 
-std::wstring __mod_path__; // static variable to avoid local one.
+std::wstring __mod_path__ = L""; // static variable to avoid local one.
 std::wstring CyGame::getModPath()
 {
-  char *path = strdup(get_dll_folder());  
+  if( __mod_path__.empty() ){
+	  char *path = get_dll_folder();
 
-  // Remove lowest folder (\Assets)
-  char *last_slash = strrchr(path, '\\');
-  *last_slash = '\0';
+	  // Remove lowest folder (\Assets)
+	  char *last_slash = strrchr(path, '\\');
+	  *last_slash = '\0';
 
-  __mod_path__.clear();
-  int status = CharToWString(__mod_path__, path);
-  free(path);
-  return status == 0 ? __mod_path__ : L"";
+	  //__mod_path__.clear();
+	  int status = CharToWString(__mod_path__, path);
+	  free(path);
+  }
+  return __mod_path__;
 }
 
 int CyGame::unzipModUpdate(std::wstring zipFilename)
@@ -1241,7 +1252,7 @@ int CyGame::unzipModUpdate(std::wstring zipFilename)
 	
 #if 0
 	// Manuell konstruieren
-	const char *dll_folder = get_dll_folder();
+	char *dll_folder = get_dll_folder();
 	std::string absolute_path = std::string(dll_folder);
 	absolute_path.append("\\");
 	absolute_path.append("Update 1.zip");
