@@ -113,4 +113,19 @@
 #define PYEventModule					"CvEventInterface"
 #define PYRandomEventModule					"CvRandomEventInterface"
 
+// BEGIN PBMod defines
+#define PBMOD_FRAME_POINTER_ENABLED 1
+#define DISALLOW_LOCAL_LOADING_OF_PB 1
+
+#ifdef PBMOD_FRAME_POINTER_ENABLED
+#define CHECK_MOD_VERSION_ON_LOGIN 1
+#endif
+
+#ifdef CHECK_MOD_VERSION_ON_LOGIN
+//For metadata bytes in loginscreen message
+#define METADATA_MAX_LEN 18 // maximal string blowup without graphical issues
+#define METADATA_MIN_LEN 6  // minimal string blowup required for data.
+#endif
+// END PBMod defines
+
 #endif	// CVDEFINES_H

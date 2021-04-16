@@ -106,6 +106,38 @@
 		<Spanish>Disable search at startup</Spanish>
 	</TEXT>
 	<TEXT>
+		<Tag>TXT_KEY_PBMOD_WRONG_MODNAME</Tag>
+		<English>This server uses an other mod![NEWLINE][NEWLINE] Game will crash on login.</English>
+		<French>This server uses an other mod![NEWLINE][NEWLINE] Game will crash on login.</French>
+		<German>Dieser Server verwendet eine andere Mod![NEWLINE][NEWLINE] Das Spiel wird beim Login abst&#252;rzen.</German>
+		<Italian>This server uses an other mod![NEWLINE][NEWLINE] Game will crash on login.</Italian>
+		<Spanish>This server uses an other mod![NEWLINE][NEWLINE] Game will crash on login.</Spanish>
+	</TEXT>
+	<TEXT>
+		<Tag>TXT_KEY_PBMOD_WRONG_MODVERSION</Tag>
+		<English>This server uses an other mod version![NEWLINE][NEWLINE] Game will crash on login.</English>
+		<French>This server uses an other mod version![NEWLINE][NEWLINE] Game will crash on login.</French>
+		<German>Dieser Server verwendet eine andere Mod-Version![NEWLINE] Das Spiel wird beim Login abst&#252;rzen.</German>
+		<Italian>This server uses an other mod version![NEWLINE][NEWLINE] Game will crash on login.</Italian>
+		<Spanish>This server uses an other mod version![NEWLINE][NEWLINE] Game will crash on login.</Spanish>
+	</TEXT>
+	<TEXT>
+		<Tag>TXT_KEY_PBMOD_WRONG_MODVERSION_MAYBE_OK</Tag>
+		<English>This server uses an other mod version![NEWLINE][NEWLINE] The login is still possible, because the game save is not password protected.</English>
+		<French>This server uses an other mod version![NEWLINE][NEWLINE] The login is still possible, because the game save is not password protected.</French>
+		<German>Dieser Server verwendet eine andere Mod-Version![NEWLINE] Der Login ist trotzdem möglich, da der Spielstand nicht passwortgesch&#252;tzt ist.</German>
+		<Italian>This server uses an other mod version![NEWLINE][NEWLINE] The login is still possible, because the game save is not password protected.</Italian>
+		<Spanish>This server uses an other mod version![NEWLINE][NEWLINE] The login is still possible, because the game save is not password protected.</Spanish>
+	</TEXT>
+	<TEXT>
+		<Tag>TXT_KEY_MOD_</Tag>
+		<English></English>
+		<French></French>
+		<German></German>
+		<Italian></Italian>
+		<Spanish></Spanish>
+	</TEXT>
+	<TEXT>
 		<Tag>TXT_KEY_MOD_</Tag>
 		<English></English>
 		<French></French>

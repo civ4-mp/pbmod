@@ -2151,3 +2151,119 @@ void getUnitAIString(CvWString& szString, UnitAITypes eUnitAI)
 	default: szString = CvWString::format(L"unknown(%d)", eUnitAI); break;
 	}
 }
+
+#ifdef CHECK_MOD_VERSION_ON_LOGIN
+#include <sys/stat.h>
+#include <stdio.h>
+
+void clear_checksum(unsigned char *checksum){
+	for( int i=0; i<METADATA_MIN_LEN; ++i){
+		checksum[i] = 0;
+	}
+}
+
+size_t file_length(const char *fname){
+		// Get size of dll file
+	struct stat s;
+	s.st_size = 0;
+	stat(fname, &s);
+	return s.st_size;
+}
+
+unsigned char * fill_buffer(const char *fname){
+
+		size_t length = file_length(fname);
+
+		// Open dll file
+		FILE *fhand = fopen(fname, "r");
+		if (fhand == NULL || length == 0) {
+			return NULL;
+		}
+
+		// Read part of dll file
+		// No need to take it tooo serious with this
+		// checksum. Just take a part of this file, if it is a big one.
+		if( length > 10000 ){
+			fseek(fhand, length - 5000 - length/8, SEEK_SET);
+			length = 2500;
+		}
+
+		//read file
+		unsigned char *buffer = (unsigned char *)calloc(length, 1);
+		fread(buffer, sizeof(unsigned char), length, fhand);
+		buffer[length-1] = '\0';
+		fclose(fhand);
+
+		return buffer;
+}
+
+void update(unsigned char *out, const unsigned char *in, size_t len){
+	while(len--){
+		*out++ ^= *in++;
+	}
+}
+
+void gen_modname_checksum(unsigned char *checksum, bool bPasswordProtected){
+	clear_checksum(checksum);
+	static unsigned char __modname_checksum[32] = { 0 };
+	static bool __modname_checksum_done = false;
+	if (!__modname_checksum_done){
+		__modname_checksum_done = true;
+
+		const unsigned char *md5 = (const unsigned char *) gDLL->md5String((char *)gDLL->getModName());
+		memcpy(__modname_checksum, md5, 32);
+	}
+	checksum[0] = bPasswordProtected?255:0;
+	checksum[1] = __modname_checksum[1];
+	checksum[2] = __modname_checksum[10];
+	checksum[3] = __modname_checksum[11];
+	checksum[4] = __modname_checksum[20];
+	checksum[5] = __modname_checksum[21];
+}
+
+void gen_modversion_checksum(unsigned char *checksum){
+	clear_checksum(checksum);
+
+	static unsigned char __modversion_checksum[32] = { 0 };
+	static bool __modversion_checksum_done = false;
+	if (!__modversion_checksum_done){
+		__modversion_checksum_done = true;
+
+		// Get path to dll file
+		char *folder = get_dll_folder();
+		CvString filename1 = folder;
+		filename1.append("\\CvGameCoreDLL.dll");
+
+		CvString filename2 = folder;
+		filename2.resize(filename2.find_last_of("/\\")); // remove '\Assets'
+		filename2.append("\\update_info.json");
+
+		free(folder);
+
+		unsigned char *buffer1 = fill_buffer(filename1.c_str());
+		unsigned char *buffer2 = fill_buffer(filename2.c_str());
+
+		// Get md5 checksum and free buffer
+		if (buffer1 != NULL ){
+			const unsigned char *md5_1 = (unsigned char *) gDLL->md5String((char *)buffer1);
+			memcpy(__modversion_checksum, md5_1, 32);
+			//free(md5_1); // not sure if free'ing is correct.
+		}
+		if (buffer2 != NULL ){
+			const unsigned char *md5_2 = (unsigned char *) gDLL->md5String((char *)buffer2);
+			update(__modversion_checksum, md5_2, 32);
+			//free(md5_2); // not sure if free'ing is correct.
+		}
+
+		free(buffer1);
+		free(buffer2);
+	}
+
+	checksum[0] = __modversion_checksum[0];
+	checksum[1] = __modversion_checksum[1];
+	checksum[2] = __modversion_checksum[10];
+	checksum[3] = __modversion_checksum[11];
+	checksum[4] = __modversion_checksum[20];
+	checksum[5] = __modversion_checksum[21];
+}
+#endif
