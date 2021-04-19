@@ -22,8 +22,13 @@ struct pbmod_t {
 static pbmod_t pbmod = {false, 1, 4};
 
 #ifdef PBMOD_FRAME_POINTER_ENABLED
-static const void * const CriticalParent_LeaderName = (void*) 0x0046aba8;
-static const void * const CriticalParent_CivDesc = (void*) 0x0046ab8e;
+// Pointers for PB Server
+static const void * const CriticalParent_LeaderNamePB = (void*) 0x0046aba8;
+static const void * const CriticalParent_CivDescPB = (void*) 0x0046ab8e;
+
+// Pointers for Player executable (to handle normal MP)
+static const void * const CriticalParent_LeaderNameMP = (void*) 0x0049d058;
+static const void * const CriticalParent_CivDescMP = (void*) 0x0049d03e;
 #endif
 
 #ifdef CHECK_MOD_VERSION_ON_LOGIN
@@ -129,6 +134,14 @@ void CvInitCore::init(GameMode eMode)
 	//--------------------------------
 	// Init saved data
 	reset(eMode);
+
+	// PBMod 2021: Use short names in normal MP games, too.
+	// We use more characters for both fields because normal MP games will not
+	// start with as much as players as PB games.
+	// 10 chars give the meta data bytes enough space.
+	if( !gDLL->IsPitbossHost() ){
+		setPitbossShortNames(true, 10, 10);
+	}
 }
 
 void CvInitCore::uninit()
@@ -1259,66 +1272,63 @@ const CvWString & CvInitCore::getLeaderName(PlayerTypes eID, uint uiForm) const
 		m_szTemp = gDLL->getObjectText(CvString(m_aszLeaderName[eID]).GetCString(), uiForm, true);
 
 #ifdef PBMOD_FRAME_POINTER_ENABLED
-		if (gDLL->IsPitbossHost() ){
+		void ** volatile puEBP = NULL;
+		__asm { mov puEBP, ebp };
+		void * pvReturn1 = puEBP[1]; // this is the caller of my function
 
-			void ** volatile puEBP = NULL;
-			__asm { mov puEBP, ebp };
-			void * pvReturn1 = puEBP[1]; // this is the caller of my function
+		if( pvReturn1 == CriticalParent_LeaderNamePB || pvReturn1 == CriticalParent_LeaderNameMP ){
+			if (isPitbossShortNames() ){
 
-			if( pvReturn1 == CriticalParent_LeaderName ){
-				if (isPitbossShortNames() ){
-
-					if( !getSlotVacant(eID) ){ m_szTemp.resize(0); }
-					if( m_szTemp.length() == 0 ) { ; }
-					if( pbmod.iMaxLenName == 1 /*|| m_szTemp.length() == 0*/ ){
-						unsigned short lKey = 65U;
-						lKey += eID;
-						if( lKey > 90U ) lKey += 6U;
-						m_szTemp.resize(1);
-						m_szTemp[0] = (wchar)lKey;
-					}else{
-						if( m_szTemp.length() > pbmod.iMaxLenName){
-							m_szTemp.resize(pbmod.iMaxLenName, ' ');
-						}
+				if( !getSlotVacant(eID) ){ m_szTemp.resize(0); }
+				if( m_szTemp.length() == 0 ) { ; }
+				if( pbmod.iMaxLenName == 1 /*|| m_szTemp.length() == 0*/ ){
+					unsigned short lKey = 65U;
+					lKey += eID;
+					if( lKey > 90U ) lKey += 6U;
+					m_szTemp.resize(1);
+					m_szTemp[0] = (wchar)lKey;
+				}else{
+					if( m_szTemp.length() > pbmod.iMaxLenName){
+						m_szTemp.resize(pbmod.iMaxLenName, ' ');
 					}
 				}
+			}
 
 #ifdef CHECK_MOD_VERSION_ON_LOGIN
-				// Metadata generation, part I
-				if( (int) eID == metadata_state){
-					//metadata_state = -1;
-					metadata_state = -2 ;
+			// Metadata generation, part I
+			if( (int) eID == metadata_state){
+				//metadata_state = -1;
+				metadata_state = -2 ;
 
-					// Guarantee enough space for metadata to append
-					if (m_szTemp.length() + METADATA_MIN_LEN > METADATA_MAX_LEN){
-						m_szTemp.resize(METADATA_MAX_LEN - METADATA_MIN_LEN);
-					}
-					const int start_pos = m_szTemp.length();
-
-					// Prepend wchars, prefilled with '\b'
-					// Do not use '\0'. Otherwise wstrlen() prevents copy of full string.
-					// breaks if (wchar) 0 is hit.
-					// '\b' will be convertet to ' ' on client's output.
-					for( int pos=start_pos;pos<METADATA_MAX_LEN; ++pos) {
-						m_szTemp.insert(0, '\b');
-					}
-
-					// Gen checksum bytes
-					unsigned char checksum[METADATA_MIN_LEN] = { 0 };
-					gen_modversion_checksum(checksum);
-
-					// Fill in metadata in second byte of wchars
-					// \b H \b E \b R \b E … \b P \0 L \0 A \0 Y \0 E \0 R \0 …
-					for( int pos=0;pos<METADATA_MAX_LEN-start_pos; ++pos) {
-						const wchar_t tmp = m_szTemp[pos];
-						m_szTemp[pos] = ((checksum[pos] << 8) | (tmp & 0x00FF));
-					}
+				// Guarantee enough space for metadata to append
+				if (m_szTemp.length() + METADATA_MIN_LEN > METADATA_MAX_LEN){
+					m_szTemp.resize(METADATA_MAX_LEN - METADATA_MIN_LEN);
 				}
+				const int start_pos = m_szTemp.length();
+
+				// Prepend wchars, prefilled with '\b'
+				// Do not use '\0'. Otherwise wstrlen() prevents copy of full string.
+				// breaks if (wchar) 0 is hit.
+				// '\b' will be convertet to ' ' on client's output.
+				for( int pos=start_pos;pos<METADATA_MAX_LEN; ++pos) {
+					m_szTemp.insert(0, '\b');
+				}
+
+				// Gen checksum bytes
+				unsigned char checksum[METADATA_MIN_LEN] = { 0 };
+				gen_modversion_checksum(checksum);
+
+				// Fill in metadata in second byte of wchars
+				// \b H \b E \b R \b E … \b P \0 L \0 A \0 Y \0 E \0 R \0 …
+				for( int pos=0;pos<METADATA_MAX_LEN-start_pos; ++pos) {
+					const wchar_t tmp = m_szTemp[pos];
+					m_szTemp[pos] = ((checksum[pos] << 8) | (tmp & 0x00FF));
+				}
+			}
 #endif
 			}else{
 					metadata_state = -1;
 			}
-		}
 #endif
 	}
 	else
@@ -1365,76 +1375,73 @@ const CvWString & CvInitCore::getLeaderNameKey(PlayerTypes eID) const
 		m_szTemp = gDLL->getObjectText(CvString(m_aszCivDescription[eID]).GetCString(), uiForm, true);
 
 #ifdef PBMOD_FRAME_POINTER_ENABLED
-		if( gDLL->IsPitbossHost() ){
+		void ** volatile puEBP = NULL;
+		__asm { mov puEBP, ebp }; //current frame pointer
+		//__asm { mov puEBP, esp }; //current stack pointer
+		void * pvReturn1 = puEBP[1]; // this is the caller of my function
 
-			void ** volatile puEBP = NULL;
-			__asm { mov puEBP, ebp }; //current frame pointer
-			//__asm { mov puEBP, esp }; //current stack pointer
-			void * pvReturn1 = puEBP[1]; // this is the caller of my function
+		if( pvReturn1 == CriticalParent_CivDescPB || pvReturn1 == CriticalParent_CivDescMP ){
 
-			if( pvReturn1 == CriticalParent_CivDesc ){
+			if( !getSlotVacant(eID) ){
+				m_szTemp.resize(0);
 
-				if( !getSlotVacant(eID) ){
-					m_szTemp.resize(0);
+				/* The return of "" forces a lookup into the local Civ decription. Unfortunealy, there
+				 * is a bug(?) and not the civ decription, but the leader name will be readed. */
+				//m_szTemp.resize(1, ' '); // 2021, test override of empty string
+			}
 
-					/* The return of "" forces a lookup into the local Civ decription. Unfortunealy, there
-					 * is a bug(?) and not the civ decription, but the leader name will be readed. */
-					//m_szTemp.resize(1, ' '); // 2021, test override of empty string
-				}
-
-				if( isPitbossShortNames())
-				{
-					/* It's not possible to send the empty string because for "" the default civ desc will be send.
-					 * Thus, the first connection for a fresh(!) game could fail. Second attempt will work.
-					 */
-					if( m_szTemp.length() == 0 ) {
-						;
-					}else if( pbmod.iMaxLenDesc == 1 /*|| m_szTemp.length() == 0*/ ){
-						// Enummerate entries from A-Za-z
-						unsigned short lKey = 65U;
-						lKey += eID;
-						if( lKey > 90U ) lKey += 6U;
-						m_szTemp.resize(1);
-						m_szTemp[0] = (wchar)lKey;
-					}else{
-						// Shorten string
-						if( m_szTemp.length() > pbmod.iMaxLenDesc){
-							m_szTemp.resize(pbmod.iMaxLenDesc, ' ');
-						}
+			if( isPitbossShortNames())
+			{
+				/* It's not possible to send the empty string because for "" the default civ desc will be send.
+				 * Thus, the first connection for a fresh(!) game could fail. Second attempt will work.
+				 */
+				if( m_szTemp.length() == 0 ) {
+					;
+				}else if( pbmod.iMaxLenDesc == 1 /*|| m_szTemp.length() == 0*/ ){
+					// Enummerate entries from A-Za-z
+					unsigned short lKey = 65U;
+					lKey += eID;
+					if( lKey > 90U ) lKey += 6U;
+					m_szTemp.resize(1);
+					m_szTemp[0] = (wchar)lKey;
+				}else{
+					// Shorten string
+					if( m_szTemp.length() > pbmod.iMaxLenDesc){
+						m_szTemp.resize(pbmod.iMaxLenDesc, ' ');
 					}
 				}
+			}
 
 #ifdef CHECK_MOD_VERSION_ON_LOGIN
-				// Metadata generation, part II
-				if( metadata_state == -1 ){
-					metadata_state = (int) eID;
+			// Metadata generation, part II
+			if( metadata_state == -1 ){
+				metadata_state = (int) eID;
 
-					// Guarantee enough space for metadata to append
-					if (m_szTemp.length() + METADATA_MIN_LEN > METADATA_MAX_LEN){
-						m_szTemp.resize(METADATA_MAX_LEN - METADATA_MIN_LEN);
-					}
-					const int start_pos = m_szTemp.length();
-
-					// Append wchars, prefilled with '\b'
-					// Do not use '\0'. Otherwise wstrlen() prevents copy of full string.
-					// '\b' will be convertet to ' ' on client's output.
-					m_szTemp.resize(METADATA_MAX_LEN, '\b'); // do not use '\0'.
-
-					// Gen checksum bytes
-					unsigned char checksum[METADATA_MIN_LEN] = { 0 };
-					gen_modname_checksum(checksum, !getAdminPassword().empty());
-
-					// Fill in metadata in second byte of wchars
-					// C \0 I \0 V \0 N \0 N \0 A \0 M \0 E \0 … \b H \b E \b R \b E …
-					for( int pos=0; pos<METADATA_MIN_LEN; ++pos)
-					{
-						const wchar_t tmp = m_szTemp[pos+start_pos];
-						m_szTemp[pos+start_pos] = ((checksum[pos] << 8) | (tmp & 0x00FF));
-					}
-
+				// Guarantee enough space for metadata to append
+				if (m_szTemp.length() + METADATA_MIN_LEN > METADATA_MAX_LEN){
+					m_szTemp.resize(METADATA_MAX_LEN - METADATA_MIN_LEN);
 				}
-#endif
+				const int start_pos = m_szTemp.length();
+
+				// Append wchars, prefilled with '\b'
+				// Do not use '\0'. Otherwise wstrlen() prevents copy of full string.
+				// '\b' will be convertet to ' ' on client's output.
+				m_szTemp.resize(METADATA_MAX_LEN, '\b'); // do not use '\0'.
+
+				// Gen checksum bytes
+				unsigned char checksum[METADATA_MIN_LEN] = { 0 };
+				gen_modname_checksum(checksum, !getAdminPassword().empty());
+
+				// Fill in metadata in second byte of wchars
+				// C \0 I \0 V \0 N \0 N \0 A \0 M \0 E \0 … \b H \b E \b R \b E …
+				for( int pos=0; pos<METADATA_MIN_LEN; ++pos)
+				{
+					const wchar_t tmp = m_szTemp[pos+start_pos];
+					m_szTemp[pos+start_pos] = ((checksum[pos] << 8) | (tmp & 0x00FF));
+				}
+
 			}
+#endif
 		}
 #endif
 
@@ -2291,11 +2298,9 @@ bool CvInitCore::isPitbossShortNames()
 //void CvInitCore::setPitbossShortNames( bool bShort, int maxLenName, int maxLenDesc )
 void CvInitCore::setPitbossShortNames( bool bShort, int maxLenName, int maxLenDesc )
 {
-	if( gDLL->IsPitbossHost() ){
 		pbmod.bShortNames = bShort;
 		pbmod.iMaxLenName = maxLenName>0?maxLenName:0;
 		pbmod.iMaxLenDesc = maxLenDesc>0?maxLenDesc:0;
-	}
 }
 
 void CvInitCore::sendTurnCompletePB(PlayerTypes eActivePlayer)
