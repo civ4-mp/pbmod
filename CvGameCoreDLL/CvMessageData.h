@@ -57,6 +57,18 @@ private:
 	PlayerTypes m_ePlayer;
 };
 
+class CvNetTurnIncomplete : public CvMessageData
+{
+public:
+	CvNetTurnIncomplete(PlayerTypes ePlayer = NO_PLAYER);
+	DllExport virtual void Debug(char* szAddendum);
+	DllExport virtual void Execute();
+	DllExport virtual void PutInBuffer(FDataStreamBase* pStream);
+	DllExport virtual void SetFromBuffer(FDataStreamBase* pStream);
+private:
+	PlayerTypes m_ePlayer;
+};
+
 class CvNetPushOrder : public CvMessageData
 {
 public:

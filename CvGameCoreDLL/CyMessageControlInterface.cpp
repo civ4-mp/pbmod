@@ -22,5 +22,7 @@ void CyMessageControlInterface()
 		.def("sendEmpireSplit", &CyMessageControl::sendEmpireSplit, "void (int (PlayerTypes) ePlayer, int iAreaId)")
 		.def("GetFirstBadConnection", &CyMessageControl::GetFirstBadConnection, "int ()")
 		.def("GetConnState", &CyMessageControl::GetConnState, "int (int iPlayer)")
+		.def("sendTurnCompletePB", &CyMessageControl::sendTurnCompletePB, "void (int iPlayer) - allows you to force a turn to end")
+		.def("sendTurnIncompletePB", &CyMessageControl::sendTurnIncompletePB, "void (int iPlayer) - allows you to reset status of player")
 	;
 }

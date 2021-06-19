@@ -44,6 +44,28 @@ void CvMessageControl::sendTurnCompleteAll()
 	}
 }
 
+void CvMessageControl::sendTurnCompletePB(PlayerTypes ePlayer)
+{
+	if( GC.getGameINLINE().isPitboss() )
+	{
+		if (GET_PLAYER(ePlayer).isAlive())
+		{
+			gDLL->sendMessageData(new CvNetTurnComplete(ePlayer));
+		}
+	}
+}
+
+void CvMessageControl::sendTurnIncompletePB(PlayerTypes ePlayer)
+{
+	if( GC.getGameINLINE().isPitboss() )
+	{
+		if (GET_PLAYER(ePlayer).isAlive())
+		{
+			gDLL->sendMessageData(new CvNetTurnIncomplete(ePlayer));
+		}
+	}
+}
+
 void CvMessageControl::sendPushOrder(int iCityID, OrderTypes eOrder, int iData, bool bAlt, bool bShift, bool bCtrl)
 {
 	if (NO_PLAYER != GC.getGameINLINE().getActivePlayer())

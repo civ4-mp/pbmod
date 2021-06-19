@@ -1222,12 +1222,6 @@ void CyGame::doControlWithoutWidget(int /*ControlTypes*/ eControl) const
     }
 }
 
-void CyGame::sendTurnCompletePB(int iPlayer){
-	if( m_pGame != NULL ){
-    GC.getInitCore().sendTurnCompletePB((PlayerTypes) iPlayer);
-	}
-}
-
 std::wstring __mod_path__ = L""; // static variable to avoid local one.
 std::wstring CyGame::getModPath()
 {

@@ -87,6 +87,8 @@ CvInitCore::CvInitCore()
 	m_aiNetID = new int[MAX_PLAYERS];
 	m_abReady = new bool[MAX_PLAYERS];
 
+	//m_aiMetaData = new int[MAX_PLAYERS];
+
 	m_aszPythonCheck = new CvString[MAX_PLAYERS];
 	m_aszXMLCheck = new CvString[MAX_PLAYERS];
 
@@ -2302,18 +2304,3 @@ void CvInitCore::setPitbossShortNames( bool bShort, int maxLenName, int maxLenDe
 		pbmod.iMaxLenName = maxLenName>0?maxLenName:0;
 		pbmod.iMaxLenDesc = maxLenDesc>0?maxLenDesc:0;
 }
-
-void CvInitCore::sendTurnCompletePB(PlayerTypes eActivePlayer)
-{
-  // required to set active player variable without side effects.
-  if( gDLL->IsPitbossHost() ){
-    if( (int)eActivePlayer > NO_PLAYER && (int)eActivePlayer <= MAX_CIV_PLAYERS){
-      PlayerTypes backup_active;
-      backup_active = m_eActivePlayer;
-      m_eActivePlayer = eActivePlayer;
-      CvMessageControl::getInstance().sendTurnComplete();
-      m_eActivePlayer = backup_active;
-    }
-  }
-}
-

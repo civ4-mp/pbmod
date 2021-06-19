@@ -15,6 +15,8 @@ CvMessageData* CvMessageData::createMessage(GameMessageTypes eType)
 		return new CvNetAutoMoves();
 	case GAMEMESSAGE_TURN_COMPLETE:
 		return new CvNetTurnComplete();
+	case GAMEMESSAGE_TURN_INCOMPLETE:
+		return new CvNetTurnIncomplete();
 	case GAMEMESSAGE_PUSH_ORDER:
 		return new CvNetPushOrder();
 	case GAMEMESSAGE_POP_ORDER: 
@@ -157,6 +159,34 @@ void CvNetTurnComplete::PutInBuffer(FDataStreamBase* pStream)
 }
 
 void CvNetTurnComplete::SetFromBuffer(FDataStreamBase* pStream)
+{
+	pStream->Read((int*)&m_ePlayer);
+}
+
+CvNetTurnIncomplete::CvNetTurnIncomplete(PlayerTypes ePlayer) : CvMessageData(GAMEMESSAGE_TURN_INCOMPLETE), m_ePlayer(ePlayer) 
+{ 
+}
+
+void CvNetTurnIncomplete::Debug(char* szAddendum)
+{
+	sprintf(szAddendum, "Turn Incomplete, %d", m_ePlayer);
+}
+
+void CvNetTurnIncomplete::Execute()
+{
+	if (m_ePlayer != NO_PLAYER)
+	{
+		//GET_PLAYER(m_ePlayer).setEndTurn(false);
+		GET_PLAYER(m_ePlayer).setTurnActive(true);
+	}
+}
+
+void CvNetTurnIncomplete::PutInBuffer(FDataStreamBase* pStream)
+{
+	pStream->Write(m_ePlayer);
+}
+
+void CvNetTurnIncomplete::SetFromBuffer(FDataStreamBase* pStream)
 {
 	pStream->Read((int*)&m_ePlayer);
 }
