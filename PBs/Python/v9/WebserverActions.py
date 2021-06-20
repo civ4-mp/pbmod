@@ -490,7 +490,7 @@ def action_kick_player(inputdata, server, wfile):
 
 
 @action_args_decorator
-def action_end_player_turn(inputdata, server, wfile):
+def action_complete_player_turn(inputdata, server, wfile):
     playerId = int(inputdata.get("playerId", -1))
     if playerId > -1 and playerId < gc.getMAX_CIV_PLAYERS():
         bPause = False
@@ -498,8 +498,37 @@ def action_end_player_turn(inputdata, server, wfile):
             bPause = True
             E.CyGame().setPausePlayer(-1)
 
-        E.CyGame().sendTurnCompletePB(playerId)
-        wfile.write(gen_answer("Turn of player %i finished." % (playerId,)))
+        if not hasattr(E.CyMessageControl(), "sendTurnCompletePB"):
+            E.CyGame().sendTurnCompletePB(playerId)  # deprecated variant
+        else:
+            E.CyMessageControl().sendTurnCompletePB(playerId)
+        wfile.write(gen_answer("Status of player %i set on finished." % (playerId,)))
+
+        # Restoring of pause needs to be done in non-blocking style.
+        if bPause:
+            def restore_pause():
+                E.CyGame().setPausePlayer(0)
+                global __timer
+                __timer = None
+
+            global __timer
+            __timer = Timer(1, restore_pause)
+            __timer.start()
+
+    else:
+        wfile.write(gen_answer("Invalid player id.", "fail"))
+
+@action_args_decorator
+def action_incomplete_player_turn(inputdata, server, wfile):
+    playerId = int(inputdata.get("playerId", -1))
+    if playerId > -1 and playerId < gc.getMAX_CIV_PLAYERS():
+        bPause = False
+        if E.CyGame().isPaused():
+            bPause = True
+            E.CyGame().setPausePlayer(-1)
+
+        E.CyMessageControl().sendTurnIncompletePB(playerId)
+        wfile.write(gen_answer("Status of player %i set on unfinished." % (playerId,)))
 
         # Restoring of pause needs to be done in non-blocking style.
         if bPause:
@@ -870,7 +899,9 @@ Action_Handlers = {
     "setPlayerPassword": action_player_password,
     "removeMagellanBonus": action_remove_magellan,
     "kickPlayer": action_kick_player,
-    "endPlayerTurn": action_end_player_turn,
+    "endPlayerTurn": action_complete_player_turn,  # deprecated keyword
+    "completePlayerTurn": action_complete_player_turn,
+    "incompletePlayerTurn": action_incomplete_player_turn,
     "setPlayerColor": action_player_color,
     "getMotD": action_get_motd,
     "getWBSave": action_get_wbsave,
@@ -899,6 +930,11 @@ def createGameData():
         gamedata["turnTimer"] = 1
         gamedata['turnTimerMax'] = gc.getGame().getPitbossTurnTime()
         gamedata['turnTimerValue'] = PB.getTurnTimeLeft()
+
+        # During advanced start the game is negative. Set dummy value
+        if gamedata['turnTimerValue'] < 0:
+            gamedata['turnTimerValue'] = 4*60*60*24*7 + 1
+
     else:
         gamedata["turnTimer"] = 0
 
