@@ -119,3 +119,9 @@ their turns.
 list_cities, list_units, unreveal_map, remove_ocean_forrest, etc
 • Fix startup crash if Pyconsole is enabled.
 • Fix scroll bug in score list during contact attempt of other human player.
+
+New in version 9.4 (PB Mod_v9, 2021)
+• Added setVictoryValid() and changeRevolutionTimer() to Python interface
+• Allowing reseting player's turn state to inpomplete
+• Fix Whip bug for IMP settlers (rounding issue removed)
+• Mod updater screen is now visible directly after game startup.
