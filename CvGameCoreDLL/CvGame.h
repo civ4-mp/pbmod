@@ -9,20 +9,10 @@
 #include "CvDeal.h"
 #include "CvRandom.h"
 
-// PB Mod
-#include <iostream>
-
-#define BOOST_THREAD_NO_LIB
-#define BOOST_THREAD_USE_LIB
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
-#include <boost/noncopyable.hpp>
-
+// mod-updater
+//#include <iostream>
 #include "CyArgsList.h"
-
-#define WITH_TIMER
-class Timer;
-// PB Mod END
+// mod-updater END
 
 
 class CvPlot;
@@ -296,7 +286,19 @@ public:
 	DllExport bool isPlayerOptionsSent() const;
 	DllExport void sendPlayerOptions(bool bForce = false);
 
-	DllExport PlayerTypes getActivePlayer() const;																				// Exposed to Python
+	// mod-updater
+	/* Split getActivePlayer into two cases. The default one for the internal calls
+	   and a second for calls from Civ4's Exe. This allows us to detecting the finishing of
+	   the main menu drawing with a small overhead.
+	   Suggestion from f1rpo, see https://forums.civfanatics.com/threads/replacing-the-custom-game-screen-proof-of-concept.670307/#post-16114837
+
+	   Add ?getActivePlayer@CvGame@@QBE?AW4PlayerTypes@@XZ=?getActivePlayerExternal@CvGame@@QBE?AW4PlayerTypes@@XZ
+	   to CvGameCoreDLL.def
+	*/
+	/* DllExport */ PlayerTypes getActivePlayer() const; // Exposed to Python
+	/* DllExport as getActivePlayer() by Def-file */ PlayerTypes getActivePlayerExternal() const;
+	// mod-updater END
+
 	DllExport void setActivePlayer(PlayerTypes eNewValue, bool bForceHotSeat = false);		// Exposed to Python
 	DllExport void updateUnitEnemyGlow();
 
@@ -562,8 +564,6 @@ public:
 	DllExport bool isDiploScreenUp() const;
 	// PB Mod
 	void doControlWithoutWidget(ControlTypes eControl) const;
-	int delayedPythonCall(int milliseconds, int arg1 = -1, int arg2 = -1); // Starts new thread
-	int delayedPythonCall2(); // Called by other thread
 	void fixTradeRoutes();
 	void changeCorporationCountPlayers(CorporationTypes eCorporation, PlayerTypes ePlayer, int iChange);
 	int getCorporationCountPlayers(CorporationTypes eCorporation) const;
@@ -676,14 +676,11 @@ protected:
 
 // PB Mod
 	int* m_piCorpNumAlivePlayers; // Number of alive players for each corporation
-
-#ifdef WITH_TIMER
-	Timer *m_pTimer;
-	HANDLE m_pMainThreadDup;
-	CyArgsList m_timerArgsList;
-#endif
 // PB Mod END
-
+// mod-updater
+	mutable bool m_bUpdaterShown;
+	mutable int m_iMainMenuDrawnCounter;
+// mod-updater END
 
 	void doTurn();
 	void doDeals();

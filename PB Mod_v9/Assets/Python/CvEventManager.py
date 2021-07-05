@@ -385,9 +385,8 @@ class CvEventManager:
             CvModUpdaterScreen.integrate()
 
         # Show ModUpdater screen after Window switch
-        if( bActive and
-            -1 == CyGame().getActivePlayer() and not CyGame().isPitbossHost()):
-            CvScreensInterface.showModUpdaterScreen()
+        if bActive:
+            CvScreensInterface.showModUpdaterScreen(True)
         # Updater Mod END
 
     def onUnInit(self, argsList):

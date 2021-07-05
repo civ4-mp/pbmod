@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 ## Sid Meier's Civilization 4
 ## Copyright Firaxis Games 2005
+from CvPythonExtensions import *
 #import string
 #from time import time
 #from copy import deepcopy
 from threading import Timer
 import re
-
-from CvPythonExtensions import *
 
 import CvUtil
 from CvWBDesc import CvPlayerDesc
@@ -22,17 +20,16 @@ import CvGameInterface
 import CvGameUtils
 import CvEventInterface
 
+# Non-gui part of updater. Can also be called without running Civ4
 import ModUpdater
-
-# Delay of first drawing call of mod window after startup
-# Values < 0 disable delayed drawing.
-DELAYED_MS = 5000
 
 # globals
 gc = CyGlobalContext()
 ArtFileMgr = CyArtFileMgr()
 localText = CyTranslator()
 
+# Number of redrawing calls of main menu until the update window will be drawn.
+STARTUP_DRAWING_DELAY = 20
 
 """
     Add all required changes to Civ4 classes/modules
@@ -40,58 +37,60 @@ localText = CyTranslator()
 """
 def integrate():
 
-    # Attention, shifting this definition from CvScreenEnums into
-    # integrate() could lead to application crashs. Always define value
-    # directly in CvScreenEnums.
     #CvScreenEnums.MODUPDATER_SCREEN = 2000
+    # => Attention, shifting this definition from CvScreenEnums into
+    #    integrate() could lead to application crashs. Always define 
+    #    this value directly in CvScreenEnums.
 
     CvScreensInterface.modUpdaterScreen = CvModUpdaterScreen()
-    def _showModUpdaterScreen():
-        if CvScreensInterface.modUpdaterScreen.other_screen_open:
-            return
+    def showModUpdaterScreen(bWindowActivation=False):
+        print("CvModUpaterScreen: showModUpdaterScreen called %d" % (int(bWindowActivation),))
+        if -1 == CyGame().getActivePlayer() and not CyGame().isPitbossHost():
+            # Running the drawing of the screen can crash the game in the
+            # first window activation event (internal initialization not finished)
+            # So we skip the drawing until the menu was drawn first by an other
+            # event.
+            if bWindowActivation and not CvScreensInterface.modUpdaterScreen.FIRST_DRAWN:
+                return
 
-        if CyGame().getActivePlayer() == -1 and not CyGame().isPitbossHost():
             CvScreensInterface.modUpdaterScreen.showScreen(True)
 
-    def _pediaShowHistorical(argsList):
+    def pediaShowHistorical(argsList):
         # Switch between Pedia and ModUpdater screen
         if argsList[0] >= CvScreensInterface.modUpdaterScreen.ID_OFFSET:
             val1 = argsList[0] - CvScreensInterface.modUpdaterScreen.ID_OFFSET
             val2 = argsList[1]
             # Just return here because event is already handled
             return
-            # deprecated
-            # CvScreensInterface.modUpdaterScreen.handleClick(val1, val2)
+            CvScreensInterface.modUpdaterScreen.handleClick(val1, val2)
         else:
             iEntryId = CvScreensInterface.pediaMainScreen.pediaHistorical.getIdFromEntryInfo(argsList[0], argsList[1])
             CvScreensInterface.pediaMainScreen.pediaJump(CvScreenEnums.PEDIA_HISTORY, iEntryId, True)
             return
 
-    CvScreensInterface.showModUpdaterScreen = _showModUpdaterScreen
-    CvScreensInterface.pediaShowHistorical = _pediaShowHistorical
+    def showUpdater(argsList):
+        iArg1, = argsList
+
+        if iArg1 in [0, 1, STARTUP_DRAWING_DELAY]:
+            print("CvModUpaterScreen: showUpater called %d-th time." % (iArg1,))
+
+        if iArg1 == STARTUP_DRAWING_DELAY: # and not CvScreensInterface.modUpdaterScreen.FIRST_DRAWN:
+            CvScreensInterface.showModUpdaterScreen()
+            return 1  # We're done here
+
+        return 0
+
+    CvScreensInterface.showModUpdaterScreen = showModUpdaterScreen
+    CvScreensInterface.pediaShowHistorical = pediaShowHistorical
     CvScreensInterface.HandleInputMap[CvScreenEnums.MODUPDATER_SCREEN] = \
         CvScreensInterface.modUpdaterScreen
     CvScreensInterface.HandleNavigationMap[CvScreenEnums.MODUPDATER_SCREEN] = \
         CvScreensInterface.modUpdaterScreen
 
-    _pediaShow = CvScreensInterface.pediaShow
-    _optionShow = CvScreensInterface.showOptionsScreen
-    def pediaShow():
-        CvScreensInterface.modUpdaterScreen.hideAllWidgets()
-        CvScreensInterface.modUpdaterScreen.other_screen_open = True
-        return _pediaShow()
+    # Called from DLL in CvGame::getActivePlayer()
+    CvGameInterface.showUpdater = showUpdater
 
-    def optionShow():
-        CvScreensInterface.modUpdaterScreen.hideAllWidgets()
-        CvScreensInterface.modUpdaterScreen.other_screen_open = True
-        return _optionShow()
-
-    CvScreensInterface.pediaShow = pediaShow
-    CvScreensInterface.showOptionsScreen = optionShow
-
-    def _delayedPythonCall(argsList):
-        return CvGameInterface.gameUtils().delayedPythonCall(argsList)
-
+    # Old stuff
     def _delayedPythonCallUtil(_self, argsList):
         iArg1, iArg2 = argsList
         #print("delayedPythonCall triggerd with %i %i" % (iArg1, iArg2))
@@ -110,7 +109,7 @@ def integrate():
 
             if pt.x == 0 and pt.y == 0:
                 print("(ModUpdaterScreen) Hey, window not ready for drawing."
-                      "Wait %s milliseconds..." % (iRepeat,))
+                        "Wait %s milliseconds..." % (iRepeat,))
                 return iRepeat
             else:
                 if not CvScreensInterface.modUpdaterScreen.FIRST_DRAWN:
@@ -120,10 +119,6 @@ def integrate():
 
         # Unhandled argument combination... Should not be reached.
         return 0
-
-
-    CvGameInterface.delayedPythonCall = _delayedPythonCall
-    CvGameUtils.CvGameUtils.delayedPythonCall = _delayedPythonCallUtil
 
     print("Integration of CvModUpaterScreen finished")
 
@@ -135,16 +130,11 @@ def mehrzahl(text, val):
         m = r"\1"
     return re.sub("{([^:]*):([^}]*)}", m, text)
 
-class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
+class CvModUpdaterScreen( CvPediaScreen.CvPediaScreen ):
 
     def __init__(self):
-        # No super() required
         self.bInit = False
         self.mode = "start"
-
-        # Do not show updater window if pedia or option screen
-        # were open in main menu
-        self.other_screen_open = False
 
         self.MOD_UPDATER_SCREEN_NAME = "ModUpdaterScreen"
         self.INTERFACE_ART_INFO = "SCREEN_BG_OPAQUE"
@@ -157,7 +147,7 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
         # self.HEADLINE_HEIGHT = 55  # Main menu height
         # self.Y_TITLE = 8
         self.HEADLINE_HEIGHT = 40
-        self.Y_TITLE = 8
+        self.Y_TITLE = 4
 
         self.X_EXIT = 994
         self.Y_EXIT = 730
@@ -171,63 +161,30 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
             "search": 3,
             "update": 4,
             "exit": 10,
-        }
+            }
         self.mode_background_heights = {
-            "start": 3 * 30,
-            "info_none": 2 * 30,
-            "info_fail": 7 * 30,
-            "info_up_to_date": 1 * 30,
-        }
+                "start": 3 * 30,
+                "info_none": 2 * 30,
+                "info_fail": 3 * 30,
+                "info_up_to_date": 1 * 30,
+                }
 
-        self.DRAWING_COUNTER = 0
-        self.FIRST_DRAWING = True # True until showScreen is called once
         self.FIRST_DRAWN = False  # True after menu was drawn.
-        # Time :   0               FIRST_DRAWING                           FIRST_DRAWN
-        # chart: [Game Start] [onWindowActivation called] ...wait...  [Timer or second onWindowActivation]
-
-        self.BULLET = "-"
-        # Made pylint happy...
-        self.UPDATER_AVAIL = u""
-        self.MOD_NAME = u""
-        self.UPDATER_SEARCH2 = u""
-        self.UPDATER_RUN = u""
-        self.UPDATER_NONE = u""
-        self.UPDATER_NO_INFO = u""
-        self.UPDATER_FAIL = u""
-        self.UPDATER_START = u""
-        self.UPDATER_STARTUP_DISABLE = u""
-        self.UPDATER_STARTUP_ENABLE = u""
-        self.SCREEN_RES = [1920, 1080]  # Real values set in initScreen()
-        # Abmaße des nicht verdeckbaren Hauptmenüs
-        self.MAIN_MENU_RES = [700, 400]
-        self.MOD_MENU_DIM = [] # Real values set in initScreen()
-        self.updater = None
+        # This needs to be done afer the main menu is drawn! Otherwise (e.g. in
+        # first onWindowActivation call) some internal stuff is not initalized
+        # and the game could crash.
 
     def getScreen(self):
         return CyGInterfaceScreen(self.MOD_UPDATER_SCREEN_NAME, CvScreenEnums.MODUPDATER_SCREEN)
 
     def showScreen(self, bForce=False):
         # Screen construction function
-        # Note: Do not call getScreen in this function during first call.
-        #       This fails in fullscreen mode.
+        # Note: Do not call getScreen in this function before main menu is
+        # drawn. This fails in fullscreen mode.
+        # (In an earlier version of this file this was true for the first call
+        # of showScreen.)
+        # Now, this workaround is not needed anymore.
         self.initScreen()
-
-        if self.FIRST_DRAWING:
-            print("First Drawing...")
-            if DELAYED_MS < 0:
-                print("Omit display of Updater Screen.")
-                self.FIRST_DRAWING = False
-                return
-
-        if self.FIRST_DRAWING:
-            self.FIRST_DRAWING = False
-            # First call of showScreen will draw the menu behind(!) the main menu.
-            if DELAYED_MS > 0:
-                CyGame().delayedPythonCall(DELAYED_MS, 1, self.DRAWING_COUNTER) # Not too early...
-            self.DRAWING_COUNTER += 1
-            return
-        else:
-            self.DRAWING_COUNTER += 1
 
         self.FIRST_DRAWN = True
         screen = self.getScreen()
@@ -238,29 +195,24 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
 
     def initScreen(self):
 
-        global DELAYED_MS
-        if (self.bInit and (
-            (DELAYED_MS >= 0 and self.DRAWING_COUNTER == 1)
-            or
-            (DELAYED_MS < 0 and self.DRAWING_COUNTER == 0)
-        )):
-            # Use second initialisation because first would blockade startup(?)
-            if 0 != int(self.updater.get_config().get("check_at_startup", 0)):
-                if self.updater.check_for_updates():
-                    if self.updater.has_pending_updates():
-                        self.mode = "info_avail_updates"
-                    else:
-                        self.mode = "info_up_to_date"
-                else:
-                    self.mode = "info_none"
-
         if self.bInit:
             return
 
-        self.bInit = True
         self.updater = ModUpdater.ModUpdater()
-        DELAYED_MS = self.updater.get_delayed_startup_seconds() * 1000
 
+        if 0 != int(self.updater.get_config().get("check_at_startup", 0)):
+            if self.updater.check_for_updates():
+                if self.updater.has_pending_updates():
+                    self.mode = "info_avail_updates"
+                else:
+                    self.mode = "info_up_to_date"
+            else:
+                self.mode = "info_none"
+
+        self.bInit = True
+
+        self.BULLET = "-"
+        #self.UPDATER_SEARCH = u"<font=3>" + localText.getText("TXT_KEY_UPDATER_SEARCH", ()).upper() + "</font>"
         self.MOD_NAME = u"<font=3>" + self.updater.get_mod_name() + "</font>"
         self.UPDATER_SEARCH2 = u"<font=3>" + localText.getText("TXT_KEY_UPDATER_SEARCH2", ()) + "</font>"
         self.UPDATER_RUN = u"<font=3>" + localText.getText("TXT_KEY_UPDATER_RUN", ()).upper() + "</font>"
@@ -278,10 +230,12 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
 
         screen = self.getScreen()
         #screen = CyGInterfaceScreen( "MainInterface", CvScreenEnums.MAIN_INTERFACE )
-        # Bildschirm-Auflösung
+        # Screen resolution
         self.SCREEN_RES = [screen.getXResolution(), screen.getYResolution()]
+        # Dimension of main menu. Do not cover this part by this screen.
+        self.MAIN_MENU_RES = [700, 400]
 
-        # Rechteck für Menu in der Form [X,Y,W,H]
+        # Drawing area of this screen, [X,Y,W,H]
         self.MOD_MENU_DIM = [
             self.SCREEN_RES[0]-250,
             25,
@@ -289,14 +243,15 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
             self.SCREEN_RES[1] - 200
         ]
 
+
         nU = len(self.updater.PendingUpdates)
         print("Num of available updates: %d" % (nU,))
-        if self.FIRST_DRAWING:
-            self.UPDATER_AVAIL = u"Hey"
-        else:
-            # This fails (C++ Exception) at early initialisation stages of Civ4!
+
+        if False:
+            # Attention, this could fail (C++ Exception) at early initialisation stages of Civ4!
             # CyTranslator.getText can not handle variables until the main menu is shown...
-            #self.UPDATER_AVAIL = u"<font=3>" + localText.getText("TXT_KEY_UPDATER_AVAIL", (nU,)).upper() + "</font>"
+            self.UPDATER_AVAIL = u"<font=3>" + localText.getText("TXT_KEY_UPDATER_AVAIL", (nU,)).upper() + "</font>"
+        else:
             # As workaround, create string by hand
             avail_txt = localText.getText("TXT_KEY_UPDATER_AVAIL_WORKAROUND", ())
             self.UPDATER_AVAIL = u"<font=3>%d %s</font>" % (nU, mehrzahl(avail_txt, nU).upper(),)
@@ -311,10 +266,10 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
         #screen.showWindowBackground( False )
         screen.showScreen(PopupStates.POPUPSTATE_IMMEDIATE, False)
 
-        # Hintergrund-Höhe von Text unter der Headline.
+        # Height of background below headline
         body_height = 0 * 30
         if self.mode == "info_avail_updates":
-            body_height = (nU + 1) * 30 + 5 
+            body_height = (nU + 1) * 30 + 5
         elif self.mode in self.mode_background_heights:
             body_height = self.mode_background_heights[self.mode]
 
@@ -322,47 +277,41 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
 
         screen.addDDSGFC(self.BG_DDS_NAME, ArtFileMgr.getInterfaceArtInfo("SCREEN_BG_OPAQUE").getPath(),
                          self.MOD_MENU_DIM[0], self.MOD_MENU_DIM[1], self.MOD_MENU_DIM[2], bg_height,
-                         WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, -1, -1)
+                         WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, -1, -1 )
 
-        # Hintergrund von Headline
+        # Background from headline
         screen.addPanel(self.PANEL_NAME, u"", u"", True, False,
                         self.MOD_MENU_DIM[0], self.MOD_MENU_DIM[1], self.MOD_MENU_DIM[2], self.HEADLINE_HEIGHT,
-                        PanelStyles.PANEL_STYLE_TOPBAR)
+                        PanelStyles.PANEL_STYLE_TOPBAR )
 
 
         if self.mode == "start":
-            screen.setText(
-                self.getNextWidgetName(), "Background", self.MOD_NAME, CvUtil.FONT_CENTER_JUSTIFY,
-                self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
-                WidgetTypes.WIDGET_GENERAL, self.ID_OFFSET+self.events["search"], -1)
+            screen.setText(self.getNextWidgetName(), "Background", self.MOD_NAME, CvUtil.FONT_CENTER_JUSTIFY,
+                    self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
+                    WidgetTypes.WIDGET_GENERAL, self.ID_OFFSET+self.events["search"], -1)
             textPos = [self.MOD_MENU_DIM[0] + 20, self.MOD_MENU_DIM[1] + self.HEADLINE_HEIGHT + 0*20]
             multiHeight = 2 * 30 # == body_height - 30
-            screen.addMultilineText(
-                self.getNextWidgetName(), self.UPDATER_SEARCH2,
-                textPos[0], textPos[1], self.MOD_MENU_DIM[2] - 40, multiHeight,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP,
-                self.ID_OFFSET+self.events["start"], -1, CvUtil.FONT_LEFT_JUSTIFY)
+            screen.addMultilineText(self.getNextWidgetName(), self.UPDATER_SEARCH2,
+                    textPos[0], textPos[1], self.MOD_MENU_DIM[2] - 40, multiHeight,
+                    WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP,
+                    self.ID_OFFSET+self.events["start"], -1, CvUtil.FONT_LEFT_JUSTIFY)
             textPos[1] += multiHeight
-            if int(self.updater.get_config().get("check_at_startup", 0)) != 0:
-                screen.setText(
-                    self.getNextWidgetName(), "Background", self.UPDATER_STARTUP_DISABLE, CvUtil.FONT_LEFT_JUSTIFY,
-                    textPos[0], textPos[1], 0, FontTypes.TITLE_FONT,
-                    WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["set_startup_search"], 0)
+            if 0 != int(self.updater.get_config().get("check_at_startup", 0)):
+                screen.setText(self.getNextWidgetName(), "Background", self.UPDATER_STARTUP_DISABLE, CvUtil.FONT_LEFT_JUSTIFY,
+                        textPos[0], textPos[1], 0, FontTypes.TITLE_FONT,
+                        WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["set_startup_search"], 0)
             else:
-                screen.setText(
-                    self.getNextWidgetName(), "Background", self.UPDATER_STARTUP_ENABLE, CvUtil.FONT_LEFT_JUSTIFY,
-                    textPos[0], textPos[1], 0, FontTypes.TITLE_FONT,
-                    WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["set_startup_search"], 1)
+                screen.setText(self.getNextWidgetName(), "Background", self.UPDATER_STARTUP_ENABLE, CvUtil.FONT_LEFT_JUSTIFY,
+                        textPos[0], textPos[1], 0, FontTypes.TITLE_FONT,
+                        WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["set_startup_search"], 1)
 
 
         if self.mode == "info_avail_updates":
-            screen.setText(
-                self.getNextWidgetName(), "Background", self.UPDATER_AVAIL, CvUtil.FONT_CENTER_JUSTIFY,
-                self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["start"], -1)
+            screen.setText(self.getNextWidgetName(), "Background", self.UPDATER_AVAIL, CvUtil.FONT_CENTER_JUSTIFY,
+                    self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
+                    WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["start"], -1)
 
-            textPos = [self.MOD_MENU_DIM[0] + 20, self.MOD_MENU_DIM[1] +
-                       self.HEADLINE_HEIGHT + 0*20 + 5 ]
+            textPos = [self.MOD_MENU_DIM[0] + 20, self.MOD_MENU_DIM[1] + self.HEADLINE_HEIGHT + 0*20]
             for u in self.updater.PendingUpdates:
                 u_text = u"<font=3>%s %s</font>" % (self.BULLET, u["name"])
                 screen.setLabel(self.getNextWidgetName(), "Background", u_text, CvUtil.FONT_LEFT_JUSTIFY,
@@ -370,55 +319,50 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
                                 WidgetTypes.WIDGET_GENERAL, -1, -1)
                 textPos[1] += 30
 
-            screen.setText(
-                self.getNextWidgetName(), "Background", self.UPDATER_START, CvUtil.FONT_CENTER_JUSTIFY,
-                self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, textPos[1], 0, FontTypes.TITLE_FONT,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["update"], 0)
+            screen.setText(self.getNextWidgetName(), "Background", self.UPDATER_START, CvUtil.FONT_CENTER_JUSTIFY,
+                        self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, textPos[1], 0, FontTypes.TITLE_FONT,
+                        WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["update"], 0)
+
 
         if self.mode == "info_up_to_date":
-            screen.setText(
-                self.getNextWidgetName(), "Background", self.MOD_NAME, CvUtil.FONT_CENTER_JUSTIFY,
-                self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["exit"], 0)
+            screen.setText(self.getNextWidgetName(), "Background", self.MOD_NAME, CvUtil.FONT_CENTER_JUSTIFY,
+                        self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
+                        WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["exit"], 0)
             textPos = [self.MOD_MENU_DIM[0] + 20, self.MOD_MENU_DIM[1] + self.HEADLINE_HEIGHT + 0*20]
-            screen.addMultilineText(
-                self.getNextWidgetName(), self.UPDATER_NONE,
-                textPos[0], textPos[1], self.MOD_MENU_DIM[2] - 40, body_height,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP,
-                self.ID_OFFSET+self.events["start"], -1, CvUtil.FONT_LEFT_JUSTIFY)
+            screen.addMultilineText(self.getNextWidgetName(), self.UPDATER_NONE,
+                    textPos[0], textPos[1], self.MOD_MENU_DIM[2] - 40, body_height,
+                    WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP,
+                    self.ID_OFFSET+self.events["start"], -1, CvUtil.FONT_LEFT_JUSTIFY)
+
 
         if self.mode == "info_none":
-            screen.setText(
-                self.getNextWidgetName(), "Background", self.MOD_NAME, CvUtil.FONT_CENTER_JUSTIFY,
-                self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["exit"], 0)
+            screen.setText(self.getNextWidgetName(), "Background", self.MOD_NAME, CvUtil.FONT_CENTER_JUSTIFY,
+                        self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
+                        WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["exit"], 0)
             textPos = [self.MOD_MENU_DIM[0] + 20, self.MOD_MENU_DIM[1] + self.HEADLINE_HEIGHT + 0*20]
-            screen.addMultilineText(
-                self.getNextWidgetName(), self.UPDATER_NO_INFO,
-                textPos[0], textPos[1], self.MOD_MENU_DIM[2] - 40, body_height,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP,
-                self.ID_OFFSET+self.events["start"], -1, CvUtil.FONT_LEFT_JUSTIFY)
+            screen.addMultilineText(self.getNextWidgetName(), self.UPDATER_NO_INFO,
+                    textPos[0], textPos[1], self.MOD_MENU_DIM[2] - 40, body_height,
+                    WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP,
+                    self.ID_OFFSET+self.events["start"], -1, CvUtil.FONT_LEFT_JUSTIFY)
+
 
         if self.mode == "info_fail":
-            screen.setText(
-                self.getNextWidgetName(), "Background", self.MOD_NAME, CvUtil.FONT_CENTER_JUSTIFY,
-                self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["start"], 0)
+            screen.setText(self.getNextWidgetName(), "Background", self.MOD_NAME, CvUtil.FONT_CENTER_JUSTIFY,
+                        self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
+                        WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["start"], 0)
             textPos = [self.MOD_MENU_DIM[0] + 20, self.MOD_MENU_DIM[1] + self.HEADLINE_HEIGHT + 0*20]
             visit_url = self.updater.get_config().get("visit_url", "")
             failText = localText.getText("TXT_KEY_UPDATER_FAILED", (visit_url,))
-            screen.addMultilineText(
-                self.getNextWidgetName(), failText,
-                textPos[0], textPos[1], self.MOD_MENU_DIM[2] - 40, body_height,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP,
-                self.ID_OFFSET+self.events["start"], -1, CvUtil.FONT_LEFT_JUSTIFY)
+            screen.addMultilineText(self.getNextWidgetName(), failText,
+                    textPos[0], textPos[1], self.MOD_MENU_DIM[2] - 40, body_height,
+                    WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP,
+                    self.ID_OFFSET+self.events["start"], -1, CvUtil.FONT_LEFT_JUSTIFY)
 
 
         if self.mode == "updating":
-            screen.setText(
-                self.getNextWidgetName(), "Background", self.UPDATER_RUN, CvUtil.FONT_CENTER_JUSTIFY,
-                self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
-                WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["exit"], 0)
+            screen.setText(self.getNextWidgetName(), "Background", self.UPDATER_RUN, CvUtil.FONT_CENTER_JUSTIFY,
+                        self.MOD_MENU_DIM[0] + self.MOD_MENU_DIM[2]/2, self.MOD_MENU_DIM[1] + self.Y_TITLE, 0, FontTypes.TITLE_FONT,
+                        WidgetTypes.WIDGET_PEDIA_DESCRIPTION_NO_HELP, self.ID_OFFSET+self.events["exit"], 0)
 
 
     # returns unique ID for a widget in this screen
@@ -436,7 +380,7 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
             startid = 0
 
         self.nWidgetCount = startid
-        for _ in range(startid, iNumWidgets):
+        for i in range(startid, iNumWidgets):
             screen.deleteWidget(self.getNextWidgetName())
 
         self.nWidgetCount = startid # getNextWidgetName has increased val..
@@ -447,7 +391,7 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
         self.nWidgetCount = 0
         screen.hide(self.BG_DDS_NAME)
         screen.hide(self.PANEL_NAME)
-        for _ in range(iNumWidgets):
+        for i in range(iNumWidgets):
             screen.hide(self.getNextWidgetName())
 
     def redraw(self):
@@ -516,18 +460,19 @@ class CvModUpdaterScreen(CvPediaScreen.CvPediaScreen):
             self.redraw()
 
   # Will handle the input for this screen...
-  # Achtung, das funktioniert für WIDGET_GENERAL NICHT vor dem Laden eines Spiels(?!)
-  # Nutze handleClick und den Umweg über WIDGET_PEDIA_DESCRIPTION_NO_HELP
-    def handleInput(self, inputClass):
+  # Attention, this does NOT WORK for WIDGET_GENERAL if no game was loaded!
+  # As workaround we use handleClick() + WIDGET_PEDIA_DESCRIPTION_NO_HELP
+  # because this already available in main menu.
+    def handleInput (self, inputClass):
         iNotifyCode = inputClass.getNotifyCode()
         # show_popup("HandleInput called")
         if inputClass.getNotifyCode() == NotifyCode.NOTIFY_CLICKED:
-            if(inputClass.getData1() >= self.ID_OFFSET and
-               inputClass.getData1() < self.ID_OFFSET + 100):
+            if( inputClass.getData1() >= self.ID_OFFSET and
+                    inputClass.getData1() < self.ID_OFFSET + 100 ):
                 #show_popup("HandleInput called for event 0")
                 self._handleClick_(
-                    inputClass.getData1() - self.ID_OFFSET,
-                    inputClass.getData2())
+                        inputClass.getData1() - self.ID_OFFSET,
+                        inputClass.getData2())
 
         return 1
 

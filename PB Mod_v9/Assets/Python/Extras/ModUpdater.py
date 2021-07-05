@@ -2,17 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import sys
+sys.dont_write_bytecode = True
 
 import zipfile
-import os
 import os.path
+import os
 import re
-import urllib
 import md5
 
-sys.dont_write_bytecode = True
 import simplejson  # Add this file
-
 
 # Use Windows internal unzip lib
 # Work's only if DLL contains Unzip2Folder function
@@ -38,20 +36,35 @@ try:
 except:
     IN_CIV4 = False
     DUMMY_MOD_PATH = os.path.join("/", "dev", "shm", _MOD_NAME_FALLBACK_)
-    #Note that __main__ overwrites DUMMY_MOD_PATH, now.
+    #Note that __main__ overwrites this value, now.
 
-# Because Python 2.4 version has no urllib.urlopen().getcode()
-class Urlopen_with_errcode(urllib.FancyURLopener):
-    errcode = 200
+# Try-catch of urllib to avoid fancy issue, see
+# https://www.realmsbeyond.net/forums/showthread.php?tid=10218&pid=787174#pid787174
+# A strange issue because it's a buildin module:
+#    <module 'urllib' from '..\WARLORDS\ASSETS\PYTHON\SYSTEM\urllib.pyc'>
+# With this catch the overall startup is not disturbed and the ingame GUI is
+# visible.
+try:
+    import urllib
+    URLLIB_OK = True
+except:
+    URLLIB_OK = False
 
-    def getcode(self):
-        return self.errcode
+if URLLIB_OK:
+    # Extend FancyURLopener because Python 2.4 version
+    # has no urllib.urlopen().getcode()
+    class Urlopen_with_errcode(urllib.FancyURLopener):
+        errcode = 200
 
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        self.errcode = errcode
+        def getcode(self):
+            return self.errcode
 
-    #def http_error_404(self, url, fp, errcode, errmsg, headers, data=None):
-    #    self.errcode = errcode
+        def http_error_default(self, url, fp, errcode, errmsg, headers):
+            self.errcode = errcode
+
+        #def http_error_404(self, url, fp, errcode, errmsg, headers, data=None):
+        #    self.errcode = errcode
+
 
 class ModUpdater:
     Config_file = "update_config.json"
@@ -76,7 +89,7 @@ class ModUpdater:
         if self.__mod_path__:
             return self.__mod_path__
 
-        if WITH_MOD_PATH and hasattr(CyGame(), "getModPath"):
+        if WITH_MOD_PATH:
             # Absolute path
             self.__mod_path__ = CyGame().getModPath()
         else:
@@ -93,7 +106,7 @@ class ModUpdater:
         #mshort = mlong.strip("\\").split("\\")[-1]
         #return mshort
 
-        mlong = self.get_mod_path()
+        mlong = self.get_mod_path();
         mshort = mlong.strip("\\").split("\\")[-1]
         return mshort
 
@@ -108,10 +121,6 @@ class ModUpdater:
                                    self.Config_file)
         return config_path
 
-    def get_delayed_startup_seconds(self):
-        # Negative value omit creation of updater screen
-        return self.get_config().get("startup_delay", -1)
-
     def read_json_dict(self, filename):
         ret = {}
         if os.path.isfile(filename):
@@ -124,7 +133,7 @@ class ModUpdater:
 
     def load_config(self):
         # Init default config
-        if isinstance(self.Default_config, str):
+        if type(self.Default_config) == type(""):
             def_config_path = os.path.join(
                 self.get_mod_path(), self.Default_config)
             config = self.read_json_dict(def_config_path)
@@ -145,10 +154,10 @@ class ModUpdater:
         # Replace mod name placeholder
         config["mod_path"] = config["mod_path"].replace(
             "[MODNAME]", self.get_mod_name())
-        # Quote spaces in urls
-        config["update_urls"] = [
-            url.replace("[MODNAME]", urllib.quote(self.get_mod_name()))
-            for url in config["update_urls"]]
+        config["update_urls"] = [ url.replace(
+            "[MODNAME]", urllib.quote(self.get_mod_name()))  # Quote for Spaces
+            for url in config["update_urls"] ]
+
 
         if not IN_CIV4:
             config["mod_path"] = self.get_mod_path() # == DUMMY_MOD_PATH
@@ -163,22 +172,18 @@ class ModUpdater:
             # for indent parameter!
             simplejson.dump(self.get_config(), fp, indent=1)
         except:  # Old 2.4 syntax required(!)
-            print("Write of '%s' failed!" % (config_path,))
+            print("(ModUpdater) Write of '%s' failed!" % (config_path,))
             return False
         return True
 
+
     def check_for_updates(self):
         config = self.get_config()
-
-        # This list will be extend for each update found.
-        available = [None]  # Dummy entry for "__vanilla__"
+        available = [None]  # Dummy for "__vanilla__"
+        # installed_names = config.get("installed_updates", [])
         available_names = ["__vanilla__"]
 
-        # This are the names of all instaled updates
-        # by this script.
-        installed_names = config.get("installed_updates", [])
-
-        # This string should equals installed_updates[-1]
+        # Should equals installed_updates[-1]
         current_version = config.get("current_version", "")
 
         # If users install updates manually, an other update could be
@@ -191,7 +196,7 @@ class ModUpdater:
         for url_prefix in config["update_urls"]:
             try:
                 url = "%s/%s" % (url_prefix, "updates.html")
-                print("Fetch '%s'" % (url,))
+                print("(ModUpdater) Fetch '%s'" % (url,))
 
                 #f = urllib.urlopen(url)  # Note: getcode was added in Python 2.6...
 
@@ -210,22 +215,18 @@ class ModUpdater:
                         continue
 
                     # Skip lines without proper filename
-                    if not update["url"].endswith(".zip"):
+                    if not update["name"].endswith(".zip"):
                         continue
                     for c in " <>":
                         if c in update["name"]:
                             continue
-
-                    # Add .zip extension because name will used as filename.
-                    update["name"] = (update["name"] + ".zip").replace(
-                        ".zip.zip", ".zip")
 
                     available.append(update)
                     available_names.append(update["name"])
 
                 f.close()
             except Exception, e:
-                print("ERR: %s" % (str(e),))
+                print("(ModUpdater) ERR: %s" % (str(e),))
                 continue  # Website lookup fails
             else:
                 bFoundUrl = True
@@ -244,7 +245,7 @@ class ModUpdater:
             upos2 = 0  # "__vanilla__" position
 
         if upos2 > upos1+1:
-            print("WRN: Some updates might be skipped." \
+            print("(ModUpdater) WRN: Some updates might be skipped." \
                   "     update_info.json refers to %s" \
                   "     but update_config.json to %s" \
                   % (current_version_by_info_file, current_version))
@@ -253,11 +254,7 @@ class ModUpdater:
         return True  # Website lookup ok
 
     def parse_update_link(self, line, url_prefix):
-        # Return dict with found parameter
-
-        # Strip <!-- --> sections.
-        line = re.sub(r'<!--.*?-->', "X", line)
-
+        # Return dict with founded parameter
         m = re.match('^.*<a[^>]* href="([^"]*)"[^>]*>([^<]*)</a>.*$', line)
         if m:
             name = m.group(2)
@@ -277,7 +274,7 @@ class ModUpdater:
 
             # Strip paths, etc
             name = os.path.basename(name)
-            name = re.sub(r"[^a-zA-Z0-9_. ]", "", name)
+            name =  re.sub("[^a-zA-Z0-9_. ]", "", name)
 
             return {"name": name.strip(), "url": url.strip(), "checksum": checksum}
         else:
@@ -288,6 +285,7 @@ class ModUpdater:
 
     def start_update(self):
         successful = []
+        bOk = True
         status = {"successful": True, "updates": []}
 
         # Overwriting of DLLs is not possible at runtime.
@@ -301,7 +299,7 @@ class ModUpdater:
                 try:
                     os.unlink(dll_path_tmp)
                 except Exception, e:
-                    print("ERR: Unable to remove '%s' Error was %s" %(dll_path_tmp, str(e)))
+                    print("(ModUpdater) ERR: Unable to remove '%s' Error was %s" %(dll_path_tmp, str(e)))
             try:
                 os.rename(dll_path, dll_path_tmp)
             finally:
@@ -328,13 +326,13 @@ class ModUpdater:
         for update in successful:
             status["updates"].append({"name": update["name"],
                                       "info": update.get("info", {})
-                                     })
+                                      })
             self.PendingUpdates.remove(update)
 
         return status
 
     def __start_update__(self, update):
-        print("Download '%s'" % (update["name"],))
+        print("(ModUpdater) Download '%s'" % (update["name"],) )
         config = self.get_config()
         zip_url = update["url"]
         zip_path = os.path.join(config["mod_path"], update["name"])
@@ -345,8 +343,8 @@ class ModUpdater:
         if update.get("checksum"):
             md5_sum = self.get_md5_sum(zip_path)
             if md5_sum == update.get("checksum"):
-                print("File '%s' is already preset. " \
-                      "Skip download of update file." % (update["name"],))
+                print("(ModUpdater) File '%s' is already preset. " \
+                      "Skip download of update file." % (update["name"],) )
                 already_downloaded = True
 
         # Download file
@@ -354,7 +352,7 @@ class ModUpdater:
             try:
                 urllib.urlretrieve(zip_url, zip_path)
             except Exception, e:
-                print("Unable to download '%s'. Err: %s" %(
+                print("(ModUpdater) Unable to download '%s'. Err: %s" %(
                     update["name"], str(e)))
                 return False
 
@@ -362,18 +360,18 @@ class ModUpdater:
         if update.get("checksum") and not already_downloaded:
             md5_sum = self.get_md5_sum(zip_path)
             if md5_sum != update.get("checksum"):
-                print("ERR: Checksum do not match for '%s'\n Expected: %s\nEvaluated: %s" % (
-                    update["name"], update.get("checksum"), md5_sum))
+                print("(ModUpdater) ERR: Checksum do not match for '%s'\n Expected: %s\nEvaluated: %s" % (
+                    update["name"], update.get("checksum"), md5_sum) )
                 return False
 
         if update["name"].endswith(".zip"):
-            print("Extract '%s'" % (update["name"],))
+            print("(ModUpdater) Extract '%s'" % (update["name"],) )
 
             self.remove_old_info_txt()
             if not self.unzip(zip_path, config["mod_path"]):
                 return False
 
-            print("Handle meta info of '%s'" % (update["name"],))
+            print("(ModUpdater) Handle meta info of '%s'" % (update["name"],) )
             update["info"] = self.get_info_json()
             if not self.handle_info_json(update["info"]):
                 return False
@@ -396,7 +394,7 @@ class ModUpdater:
         if IN_CIV4 and UNZIP_OVER_DLL:
             # Assume that zip_path is already absolute!
             abs_zip_path = zip_path
-            print("Call unzipModUpdate(\"%s\")" % (abs_zip_path,))
+            print("(ModUpdater) Call unzipModUpdate(\"%s\")" % (abs_zip_path,) )
             ret = CyGame().unzipModUpdate(abs_zip_path)
 
             return (ret == 0)
@@ -409,7 +407,7 @@ class ModUpdater:
                     continue  # Ignore lines with folders
 
                 full_path = os.path.join(target_path, dirname)
-                print("Decompressing %s in %s" % (filename, full_path))
+                print("(ModUpdater) Decompressing %s in %s" % (filename, full_path))
                 if not os.path.exists(full_path):  # Nicht notwendig?!
                     os.makedirs(full_path)
 
@@ -421,11 +419,11 @@ class ModUpdater:
                     # ../Warlords/Assets/Python/System with an other version.
                     try:
                         fp = file(os.path.join(full_path, filename),
-                                  "wb")  #, 1024*100)
+                                "wb")#, 1024*100)
                         fp.write(zfile.read(name))
                         fp.close()
                     except Exception, e2:
-                        # print(str(e2))
+                        #print((ModUpdater) str(e2))
                         raise e2
 
                 else:
@@ -433,9 +431,9 @@ class ModUpdater:
                     zfile.extract(name, target_path)
 
         except Exception, e:
-            print("Unzipping of %s failed. Error: %s Abort updating" % (
+            print("(ModUpdater) Unzipping of %s failed. Error: %s Abort updating" % (
                 zip_path, str(e)))
-            print("Abort updating")
+            print("(ModUpdater) Abort updating")
             return False
 
         return True
@@ -450,7 +448,7 @@ class ModUpdater:
         if os.path.isfile(info_path):
             try:
                 fp = file(info_path, "r")
-                info.update(dict(simplejson.load(fp)))
+                info.update( dict(simplejson.load(fp)) )
             finally:
                 fp.close()
 
@@ -470,10 +468,7 @@ class ModUpdater:
 
     def handle_info_json(self, dInfo):
         if not IN_CIV4:
-            print("Info file:")
-            print simplejson.dumps(dInfo, sort_keys=True,
-                             indent=4,
-                             separators=(',', ': '))
+            print("(ModUpdater) Info file: " + str(dInfo))
 
         # Check if update meta info provides list of files
         # which should be removed. (Note that they will be removed after
@@ -487,16 +482,16 @@ class ModUpdater:
             to_remove_abs = os.path.abspath(os.path.join(
                 mod_path_abs, to_remove_slash))
             if not to_remove_abs.startswith(mod_path_abs):
-                print("WRN: Mod updater skips unlinking of '%s'." % (to_remove,))
+                print("(ModUpdater) WRN: Mod updater skips unlinking of '%s'." % (to_remove,) )
                 continue
 
             if os.path.isfile(to_remove_abs):
                 try:
                     os.unlink(to_remove_abs)
                     if not IN_CIV4:
-                        print("Remove '%s'." % (to_remove,))
+                        print("(ModUpdater) Remove '%s'." % (to_remove,) )
                 except:
-                    print("WRN: Mod updater was unable to remove '%s'." % (to_remove,))
+                    print("(ModUpdater) WRN: Mod updater was unable to remove '%s'." % (to_remove,) )
 
         return True
 
@@ -515,7 +510,7 @@ class ModUpdater:
                 zip_bytes = md5_file.read(1024*1024)
 
         except Exception, e:
-            print("Unable to evaluate md5 of '%s'. Err: %s" %(
+            print("(ModUpdater) Unable to evaluate md5 of '%s'. Err: %s" %(
                 zip_path, str(e)))
             #md5_file.close() # not exists
         else:  # No try-except-finally in Python 2.4
@@ -526,16 +521,17 @@ class ModUpdater:
 
 if __name__ == "__main__":
     # Select Mod folder as target
+    import sys
+    import os.path
     script_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
     iAssetsPos = script_folder.rfind("Assets")
     if iAssetsPos == -1:
         DUMMY_MOD_PATH = os.path.join(script_folder, _MOD_NAME_FALLBACK_)
         # => I.e. Z:\dev\shm\Updater
     else:
-        DUMMY_MOD_PATH = script_folder[:iAssetsPos-1]
-        (_, _MOD_NAME_FALLBACK_) = os.path.split(DUMMY_MOD_PATH)
+        DUMMY_MOD_PATH =  script_folder[:iAssetsPos-1]
 
-    print("Mod path: %s" %(DUMMY_MOD_PATH,))
+    print("Mod path: %s" %(DUMMY_MOD_PATH,) )
 
     # Check if updates are forced
     bForce = False
@@ -549,7 +545,7 @@ if __name__ == "__main__":
     if updater.has_pending_updates():
         print("Avaiable updates:")
         for u in updater.PendingUpdates:
-            print("  - %s" %(u["name"],))
+            print("  - %s" %(u["name"],) )
 
         if not bForce:
             print("" \
@@ -563,9 +559,7 @@ if __name__ == "__main__":
                 bForce = True
 
         if bForce:
-            status = updater.start_update()
-            if not status.get("successful", False):
-                sys.exit(-1)
+            updater.start_update()
 
     else:
         print("No pending updates.")

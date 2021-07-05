@@ -213,6 +213,7 @@ public:
 	bool isCorporationFounded(int /*CorporationTypes*/ eIndex);
 	bool isVotePassed(int /*VoteTypes*/ eIndex) const;
 	bool isVictoryValid(int /*VictoryTypes*/ eIndex);
+	void setVictoryValid(int /*VictoryTypes*/ eIndex, bool bValid);
 	bool isSpecialUnitValid(int /*SpecialUnitTypes*/ eSpecialUnitType);
 	void makeSpecialUnitValid(int /*SpecialUnitTypes*/ eSpecialUnitType);
 	bool isSpecialBuildingValid(int /*SpecialBuildingTypes*/ eIndex);
@@ -283,7 +284,6 @@ public:
 	void doControlWithoutWidget(int /*ControlTypes*/ eControl) const;
 	std::wstring getModPath();
 	int unzipModUpdate(std::wstring zipFilename);
-	int delayedPythonCall(int milliseconds, int arg1, int arg2);
 	int setAdminPassword(const char *pNewAdminPw, const char *pAdminPw);
 	void fixTradeRoutes();
 	int getCorporationFactor100_(int numCorpLocationsOfPlayer, int numPlayersWithCorp,

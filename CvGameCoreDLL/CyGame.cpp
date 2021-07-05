@@ -876,6 +876,13 @@ bool CyGame::isVictoryValid(int /*VictoryTypes*/ eIndex)
 	return m_pGame ? m_pGame->isVictoryValid((VictoryTypes)eIndex) : false;
 }
 
+void CyGame::setVictoryValid(int /*VictoryTypes*/ eIndex, bool bValid)
+{
+	if (m_pGame) {
+		m_pGame->setVictoryValid((VictoryTypes)eIndex, bValid);
+	}
+}
+
 bool CyGame::isSpecialUnitValid(int /*SpecialUnitTypes*/ eSpecialUnitType)
 {
 	return m_pGame ? m_pGame->isSpecialUnitValid((SpecialUnitTypes)eSpecialUnitType) : false;
@@ -1265,12 +1272,6 @@ int CyGame::unzipModUpdate(std::wstring zipFilename)
 	SysFreeString(z_bstr);
 	SysFreeString(out_folder_bstr);
 	return ret;
-}
-
-/* Delayed Python Call stuff ... */
-int CyGame::delayedPythonCall(int milliseconds, int arg1, int arg2)
-{
-	return (NULL != m_pGame ? m_pGame->delayedPythonCall(milliseconds, arg1, arg2) : -1);
 }
 
 int CyGame::setAdminPassword(const char *pNewAdminPw, const char *pAdminPw)

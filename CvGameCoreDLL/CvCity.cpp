@@ -4626,6 +4626,7 @@ int CvCity::getHurryCost(bool bExtra, BuildingTypes eBuilding, bool bIgnoreNew) 
 
 int CvCity::getHurryCost(bool bExtra, int iProductionLeft, int iHurryModifier, int iModifier) const
 {
+
 	int iProduction = (iProductionLeft * iHurryModifier + 99) / 100; // round up
 
 	if (bExtra)
@@ -4634,9 +4635,14 @@ int CvCity::getHurryCost(bool bExtra, int iProductionLeft, int iHurryModifier, i
 		if (iExtraProduction > 0)
 		{
 			int iAdjustedProd = iProduction * iProduction;
-			
+#if 0
 			// round up
 			iProduction = (iAdjustedProd + (iExtraProduction - 1)) / iExtraProduction;
+#else
+			// Ramk - Fix rounding bug for IMP settlers on 55H/100H.
+			int iProductionFactor10000 = getExtraProductionDifference(10000, iModifier); // modifation factor times 10000
+			iProduction = (iProduction * 10000 + (iProductionFactor10000-1)) / iProductionFactor10000; // round up
+#endif
 		}
 	}
 

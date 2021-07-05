@@ -1,6 +1,7 @@
 #### Civilization 4 SDK Makefile 1.0 ####
 ####  Copyright 2010 Danny Daemonic  ####
 #########################################
+# Debug: magic function: 479A70
 
 #### Paths ####
 #TOOLKIT=C:\Programme\Microsoft Visual C++ Toolkit 2003
@@ -8,7 +9,7 @@ TOOLKIT=I:\Civ4\Microsoft Visual C++ Toolkit 2003
 #PSDK=C:\Programme\Microsoft SDKs\Windows\v7.0A
 PSDK=I:\Civ4\WinSdk
 ## Uncomment to have newly compiled dlls copied to your mod's Assets directory
-YOURMOD=H:\Firaxis Games\Sid Meier's Civilization 4\Beyond the Sword\Mods\PB Mod_v3
+YOURMOD=H:\Firaxis Games\Sid Meier's Civilization 4\Beyond the Sword\Mods\PB Mod_v9
 
 #### Tools ####
 CC="$(TOOLKIT)\bin\cl.exe"
@@ -145,10 +146,10 @@ Release_unfinished:
 		@IF EXIST "Release\%i" DEL "Release\%i"
 
 $(Debug_BIN): $(Debug_LINKOBJS) $(Debug_RESOURCE)
-	$(LD) /out:$(Debug_BIN) $(Debug_LDFLAGS) $(Debug_LIBS) $(Debug_LINKOBJS) $(Debug_RESOURCE)
+	$(LD) /DEF:Updater.def /out:$(Debug_BIN) $(Debug_LDFLAGS) $(Debug_LIBS) $(Debug_LINKOBJS) $(Debug_RESOURCE)
 
 $(Release_BIN): $(Release_LINKOBJS) $(Release_RESOURCE)
-	$(LD) /out:$(Release_BIN) $(Release_LDFLAGS) $(Release_LIBS) $(Release_LINKOBJS) $(Release_RESOURCE)
+	$(LD) /DEF:Updater.def /out:$(Release_BIN) $(Release_LDFLAGS) $(Release_LIBS) $(Release_LINKOBJS) $(Release_RESOURCE)
 
 .cpp{Debug}.obj:
 	@ECHO.>"$*.obj.@"
