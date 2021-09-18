@@ -74,8 +74,9 @@ def integrate():
         if iArg1 in [0, 1, STARTUP_DRAWING_DELAY]:
             print("CvModUpaterScreen: showUpater called %d-th time." % (iArg1,))
 
-        if iArg1 == STARTUP_DRAWING_DELAY: # and not CvScreensInterface.modUpdaterScreen.FIRST_DRAWN:
-            CvScreensInterface.showModUpdaterScreen()
+        if iArg1 == STARTUP_DRAWING_DELAY and not CvScreensInterface.modUpdaterScreen.FIRST_DRAWN:
+            CvScreensInterface.modUpdaterScreen.FIRST_DRAWN = True
+            CvScreensInterface.modUpdaterScreen.showScreen(False)
             return 1  # We're done here
 
         return 0
@@ -175,7 +176,10 @@ class CvModUpdaterScreen( CvPediaScreen.CvPediaScreen ):
         # and the game could crash.
 
     def getScreen(self):
-        return CyGInterfaceScreen(self.MOD_UPDATER_SCREEN_NAME, CvScreenEnums.MODUPDATER_SCREEN)
+        if self.FIRST_DRAWN:
+            return CyGInterfaceScreen(self.MOD_UPDATER_SCREEN_NAME, CvScreenEnums.MODUPDATER_SCREEN)
+
+        return False
 
     def showScreen(self, bForce=False):
         # Screen construction function
@@ -186,8 +190,10 @@ class CvModUpdaterScreen( CvPediaScreen.CvPediaScreen ):
         # Now, this workaround is not needed anymore.
         self.initScreen()
 
-        self.FIRST_DRAWN = True
         screen = self.getScreen()
+        if not screen:
+            return
+
         self.deleteAllWidgets()
         bNotActive = (not screen.isActive())
         if bNotActive or bForce:
