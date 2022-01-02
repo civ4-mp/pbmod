@@ -87,6 +87,34 @@ XVFB_CMD = 'xvfb-run -a -e /run/shm/xvfb.{GAMEID}.err --auth-file={COOKIE} '\
     'wine "{CIV4BTS_EXE}" mod= "{MOD}"\\\" /ALTROOT="{ALTROOT_WIN}" &'
 XVFB_PRE_CMD = '$(sleep 3; xauth merge {COOKIE}) &'  # ; fg'
 
+#
+# Call pitbossctl from  https://github.com/civ4-mp/docker-civ4-pitboss-server
+# for control of dockerized PB server.
+#
+# DOMAIN value is only required if you share the Pitboss saves over HTTP(S)
+# for a faster loading of the games.
+#
+# Assumed url path: {DOMAIN}/pb/PBs/
+# Assumed local path: BTS_WRAPPER_WWW_DIR
+#
+# Example:
+#   ALTROOT_BASEDIR:  $HOME/_https_pb.zulan.net/pb/PBs
+#   BTS_WRAPPER_WWW_DIR: $YOUR_HTTPD_ROOT/pb/PBs (symbolic link on above path)
+#   DOMAIN: _https_pb.zulan.net
+#   => Downloadable save is found on
+#      http://zulan.net/pb/PBs/PB1/Saves/Pitboss/auto/Recovery_Ramk.CivBeyondSwordSave
+#
+DOCKER = False
+DOMAIN = None  # Add protocol as _http_ or _https, e.g. "_https_pb.zulan.net"
+DOCKER_CMD_INIT = '{ENV_DOMAIN} pitbossctl create ' \
+    '"{GAMEID}" ' \
+    '"{MOD}" ' \
+    '{PORTS} '
+
+DOCKER_CMD_START = 'pitbossctl start ' \
+    '"{GAMEID}" "{MOD}" ' \
+    '&& pitbossctl attach "{GAMEID}"'
+
 # Seed directory
 # ALTROOT_SEED = os.path.join(ALTROOT_BASEDIR, "seed")
 
@@ -147,27 +175,18 @@ def checkIniFile(gameid):
     """ The PitbossSMTPLogin variable had to contain the altroot path."""
     altroot = GAMES[gameid]["altroot"]
     altroot_w = getAltrootWin(altroot)
-    altroot_ini = ""
-    iniFn = os.path.join(altroot, INI)
-    opt = INI_OPT+"="
-    if os.path.isfile(iniFn):
-        fp = open(iniFn, mode="r")
-        ini = fp.readlines()
-        fp.close()
-    else:
-        # print("{} not found.".format(iniFn[iniFn.rfind(os.path.sep)+1:]))
-        print("{} not found.".format(iniFn))
-        return None
 
-    for line in ini:
-        if line.startswith(opt):
-            altroot_ini = line[line.find("=")+1:].strip()
+    ini = loadIni(gameid)
+    altroot_ini = ini.get('CONFIG', INI_OPT, fallback="")
 
     return altroot_ini == altroot_w
 
 
 def fixIniFile(gameid):
     """ Set PitbossSMTPLogin variable on altroot path."""
+
+    if DOCKER:
+        return True
 
     if checkIniFile(gameid):
         # Nothing to do
@@ -176,6 +195,8 @@ def fixIniFile(gameid):
     altroot = GAMES[gameid]["altroot"]
     altroot_w = getAltrootWin(altroot)
     iniFn = os.path.join(altroot, INI)
+
+    # Manual string replacement
     opt = INI_OPT+"="
     if os.path.isfile(iniFn):
         for line in fileinput.input(iniFn, inplace=True, backup=".pybak"):
@@ -184,6 +205,12 @@ def fixIniFile(gameid):
             else:
                 print(line.strip())
 
+    # More elegant, but totally messing up the ini file... 
+    #if os.path.isfile(iniFn):
+    #    config = loadIni(gameid)
+    #    config['CONFIG'][INI_OPT] = altroot_w
+    #    with open(iniFn, 'w') as f:
+    #        config.write(f, space_around_delimiters=False)
     else:
         print("{} not found.".format(iniFn[iniFn.rfind(os.path.sep)+1:]))
         return False
@@ -202,6 +229,18 @@ def loadSettings(gameid):
         return None
 
     return pbSettings
+
+def loadIni(gameid):
+    altroot = GAMES[gameid]["altroot"]
+    iniFn = os.path.join(altroot, "CivilizationIV.ini")
+    from configparser import ConfigParser
+    config = ConfigParser()
+    try:
+        config.read(iniFn)
+    except:
+        return None
+
+    return config
 
 
 def saveSettings(gameid, pbSettings):
@@ -398,6 +437,18 @@ def getAutostartSave(pbSettings):
     return pbSettings.get("save", {}).get("filename", None)
 
 
+def findPorts(gameid, pbSettings):
+    # pbSettings = loadSettings(gameid)
+    ini = loadIni(gameid)
+    port_map = {
+        "game": ini.getint('DEBUG', 'Port', fallback=-1),
+        "www": pbSettings.get("webserver", {}).get("port", 13373),
+        "shell": pbSettings.get("shell", {}).get("port", 3333),
+    }
+    return port_map
+
+
+
 def replaceSave(gameid, pbSettings, save, adminpw=None):
     # Shorten path
     save = os.path.basename(save)
@@ -537,12 +588,12 @@ def setupGame(gameid, save_pat=None, password=None):
     altroot_w = getAltrootWin(altroot)
 
     if not os.path.exists(civ4bts_exe):
-        print("Executeable not found. Is the path correctly?\n'{}'\n"
+        print("Executeable not found. Is the path correct?\n'{}'\n"
               "".format(civ4bts_exe))
         return
 
     if not os.path.exists(altroot):
-        print("Altroot directory found. Is the path correctly?\n'{}'\n"
+        print("Altroot directory found. Is the path correct?\n'{}'\n"
               "Copy 'seed' if you want create a new game.".format(altroot))
         return
 
@@ -553,8 +604,21 @@ def setupGame(gameid, save_pat=None, password=None):
     # Start infinite loop for the selected game
     try:
         while True:
+            if DOCKER:
+                ports = findPorts(gameid, pbSettings)
+                docker_pre_cmd = DOCKER_CMD_INIT.format(
+                    GAMEID=os.path.basename(altroot),
+                    MOD=mod_name,
+                    PORTS=" ".join(["{}".format(p) for p in ports.values()]),
+                    ENV_DOMAIN="DOMAIN={}".format(DOMAIN) if DOMAIN else "",
+                )
+                docker_pre_cmd = None
+                docker_cmd = DOCKER_CMD_START.format(
+                    GAMEID=os.path.basename(altroot),
+                    MOD=mod_name,
+                )
 
-            if XVFB:
+            elif XVFB:
                 xvfb_dir = XVFB_DIR.format(GAMEID=gameid)
                 xvfb_mcookie = XVFB_MCOOKIE.format(GAMEID=gameid)
                 xvfb_cmd = XVFB_CMD.format(GAMEID=gameid,
@@ -576,7 +640,10 @@ def setupGame(gameid, save_pat=None, password=None):
                     MOD=mod_name,
                     ALTROOT=altroot)
             else:
-                if XVFB:
+                if DOCKER:
+                    pre_start_cmd = docker_pre_cmd
+                    start_cmd = docker_cmd
+                elif XVFB:
                     pre_start_cmd = xvfb_pre_cmd
                     start_cmd = xvfb_cmd
                 elif UNBUFFER:
