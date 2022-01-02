@@ -76,10 +76,23 @@ class Server:
             # (self.tcp_ip, self.tcp_port))
 
     def start(self):
-        self.run = True
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.s.bind((self.tcp_ip, self.tcp_port))
+
+        try:
+            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.s.bind((self.tcp_ip, self.tcp_port))
+            self.run = True
+        except socket.error, e:
+            print("(Civ4Shell) Socket creation failed. Error: %s" % (e,))
+        except Exception, e:
+            # TODO Do we need to catch all exception to prevent
+            # PBServer from crash at startup?!
+            print("(Civ4Shell) Error: %s" % (e,))
+
+        if self.run:
+            print("(Civ4Shell) Socket bound with (%s,%d) " % (
+                self.tcp_ip, self.tcp_port))
+
         self.s.listen(1)
         self.conn, self.addr = self.s.accept()  # Blocks until someone connects
 
@@ -106,13 +119,16 @@ class Server:
             data = data.rstrip(EOF)
             data_str_u = data.decode('utf-8')
             self.code_store.append(data_str_u)
+            #print("(Civ4Shell) INPUT: %s" % (data_str_u,) )
 
             # Wait until other thread had handled one slice (every 0.25s)
             sleep(0.35)
 
             # Fetch output
             if len(self.output_store) > 0:
-                self.conn.send("\n".join(self.output_store) + EOF)
+                output = "\n".join(self.output_store)
+                #print("(Civ4Shell) OUTPUT: %s..." % (output[:30],) )
+                self.conn.send(output + EOF)
                 self.output_store[:] = []
             elif self.run:
                 # Client expect message
