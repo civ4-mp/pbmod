@@ -106,7 +106,8 @@ XVFB_PRE_CMD = '$(sleep 3; xauth merge {COOKIE}) &'  # ; fg'
 #
 DOCKER = False
 DOMAIN = None  # Add protocol as _http_ or _https, e.g. "_https_pb.zulan.net"
-DOCKER_CMD_INIT = '{ENV_DOMAIN} pitbossctl create ' \
+DOCKER_CMD_INIT = 'pitbossctl list | grep "^{GAMEID}$" || ' \
+    '{ENV_DOMAIN} pitbossctl create ' \
     '"{GAMEID}" ' \
     '"{MOD}" ' \
     '{PORTS} '
@@ -196,21 +197,11 @@ def fixIniFile(gameid):
     altroot_w = getAltrootWin(altroot)
     iniFn = os.path.join(altroot, INI)
 
-    # Manual string replacement
-    opt = INI_OPT+"="
     if os.path.isfile(iniFn):
-        for line in fileinput.input(iniFn, inplace=True, backup=".pybak"):
-            if line.startswith(opt):
-                print("{}{}".format(opt, altroot_w))
-            else:
-                print(line.strip())
-
-    # More elegant, but totally messing up the ini file... 
-    #if os.path.isfile(iniFn):
-    #    config = loadIni(gameid)
-    #    config['CONFIG'][INI_OPT] = altroot_w
-    #    with open(iniFn, 'w') as f:
-    #        config.write(f, space_around_delimiters=False)
+        config = loadIni(gameid)
+        config['CONFIG'][INI_OPT] = altroot_w
+        with open(iniFn, 'w') as f:
+            config.write(f, space_around_delimiters=False)
     else:
         print("{} not found.".format(iniFn[iniFn.rfind(os.path.sep)+1:]))
         return False
@@ -612,7 +603,6 @@ def setupGame(gameid, save_pat=None, password=None):
                     PORTS=" ".join(["{}".format(p) for p in ports.values()]),
                     ENV_DOMAIN="DOMAIN={}".format(DOMAIN) if DOMAIN else "",
                 )
-                docker_pre_cmd = None
                 docker_cmd = DOCKER_CMD_START.format(
                     GAMEID=os.path.basename(altroot),
                     MOD=mod_name,
