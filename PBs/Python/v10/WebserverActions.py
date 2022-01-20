@@ -16,7 +16,7 @@ gc = E.CyGlobalContext()
 LT = E.CyTranslator()
 
 # Add Altroot python folder as import path
-pythonDir = os.path.join(gc.getAltrootDir(), '..', 'Python', 'v9')
+pythonDir = os.path.join(gc.getAltrootDir(), '..', 'Python', 'v10')
 if pythonDir not in sys.path:
     sys.path.append(pythonDir)
 from Settings import Settings

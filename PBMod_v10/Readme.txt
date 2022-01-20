@@ -125,3 +125,6 @@ New in version 9.4 (PB Mod_v9, 2021)
 • Allowing reseting player's turn state to inpomplete
 • Fix Whip bug for IMP settlers (rounding issue removed)
 • Mod updater screen is now visible directly after game startup.
+
+New in version 10 (PBMod_v10, 2022)
+• Finally remove space char in mod name ;)

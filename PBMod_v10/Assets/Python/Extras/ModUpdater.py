@@ -23,7 +23,7 @@ UNZIP_OVER_DLL = True
 WITH_MOD_PATH = True
 
 # Define mod name. Required if WITH_MOD_PATH = False
-_MOD_NAME_FALLBACK_ = "PB Mod_v9"
+_MOD_NAME_FALLBACK_ = "PBMod_v10"
 
 
 # Wrap extracted files into extra folder (just for debugging)

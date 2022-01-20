@@ -329,7 +329,7 @@ class Settings(dict):
         except IndexError:
             return folderpaths[0][0]
 
-    def getListOfSaves(self, pattern="*", regPattern=None, num=-1, bAddModname=False):
+    def getListOfSaves(self, pattern="*", regPattern=None, num=-1, bAddModname=True):
         folderpaths = self.getPossibleSaveFolders()
         saveList = []
         fileList = []
@@ -365,7 +365,6 @@ class Settings(dict):
                 'folderIndex': savefile[1],
                 'date': time.ctime(savefile[2]),
                 'timestamp': savefile[2],
-                'modname': mod_name,
                 }
             if bAddModname:
                 entry['mod'] = extract_mod_name(savefile[0])
@@ -464,13 +463,15 @@ def extract_mod_name(path):
     mod_name = "unknown"
     try:
         fsave = open(path, "rb")
-        fsave.read(7)
-        modname_len = ord(fsave.read(1))  # Assume one byte is enough
-        mod_name = fsave.read(modname_len)
+        fsave.read(4)
+        mod_name_len = ord(fsave.read(1))  # Assume one byte is enough
+        fsave.read(3)  # Skip higher bytes of above number
+
+        mod_name = fsave.read(mod_name_len)
         # Trim prefix Mods/ and suffix '/'
-        mod_name = modname[5:-1]
-    except:
-        pass
+        mod_name = mod_name[5:-1]
+        fsave.close()
+    except Exception, e:
+        print(e)
 
-
-    return mod_name
+    return mod_name.decode('utf-8')
