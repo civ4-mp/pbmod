@@ -128,3 +128,4 @@ New in version 9.4 (PB Mod_v9, 2021)
 
 New in version 10 (PBMod_v10, 2022)
 • Finally remove space char in mod name ;)
+• Elephant strength reduced on 7.
