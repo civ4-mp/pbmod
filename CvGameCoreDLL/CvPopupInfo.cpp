@@ -11,7 +11,7 @@ CvPopupInfo::CvPopupInfo(ButtonPopupTypes eButtonPopupType, int iData1, int iDat
 	m_eButtonPopupType(eButtonPopupType),
 	m_bPendingDelete(false)
 {
-  /* PB Mod
+  /* PBMod
    * Enrich with turnslice info to avoid second popup at next login.
    * Note that this flag will be overriden if .setFlag will be called later.
    */

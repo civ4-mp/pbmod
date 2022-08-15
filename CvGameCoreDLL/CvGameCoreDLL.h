@@ -164,12 +164,12 @@ __forceinline float MaxFloat() { return DWtoF(0x7f7fffff); }
 void startProfilingDLL();
 void stopProfilingDLL();
 
-// PB Mod
+// PBMod
 int StringToWString(std::wstring &ws, const std::string &s);
 int CharToWString(std::wstring &ws, const char *chars);
 char *get_dll_folder();
 bool Unzip2Folder( BSTR lpZipFile, BSTR lpFolder);
-// PB Mod End
+// PBMod End
 
 //
 // Boost Python

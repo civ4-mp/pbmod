@@ -390,7 +390,7 @@ int CyGame::getTurnSlice() const
 	return (NULL != m_pGame ? m_pGame->getTurnSlice() : -1);
 }
 
-//PB Mod, for increment and decrement
+//PBMod, for increment and decrement
 void CyGame::incrementTurnTimer(int iNumTurnSlices){
 	if( m_pGame != NULL){
 		if (isMPOption(MPOPTION_TURN_TIMER)){
@@ -398,7 +398,7 @@ void CyGame::incrementTurnTimer(int iNumTurnSlices){
 		}
 	}
 }
-//END PB Mod
+//END PBMod
 
 int CyGame::getMinutesPlayed() const
 {
@@ -1262,9 +1262,9 @@ int CyGame::unzipModUpdate(std::wstring zipFilename)
 	BSTR z_bstr = SysAllocString(wabsolute_path.c_str()); //=>File not found error
 	free((void *)dll_folder);
 #else
-	//BSTR z_bstr = SysAllocString(L"I:\\Olaf\\Civ4\\Beyond the Sword\\Mods\\PB Mod_v7\\Update 1.zip");//ok
+	//BSTR z_bstr = SysAllocString(L"I:\\Olaf\\Civ4\\Beyond the Sword\\Mods\\PBMod_v10\\Update 1.zip");//ok
 	BSTR z_bstr = SysAllocString(zipFilename.c_str());
-	//BSTR z_bstr = SysAllocString(L"Z:\\home\\olaf\\Civ4\\Civ4\\Beyond the Sword\\Mods\\PB Mod_v7\\Update 1.zip");
+	//BSTR z_bstr = SysAllocString(L"Z:\\home\\olaf\\Civ4\\Civ4\\Beyond the Sword\\Mods\\PBMod_v10\\Update 1.zip");
 #endif
 
 	int ret = Unzip2Folder(z_bstr, out_folder_bstr);

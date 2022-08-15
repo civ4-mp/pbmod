@@ -22,7 +22,7 @@
 	}
 
 /*
-//PB Mod, to fix crash in BASE use static variables instead of member variables in CvInitCore.
+//PBMod, to fix crash in BASE use static variables instead of member variables in CvInitCore.
 struct pbmod_t {
 	bool bShortNames;
 	size_t iMaxLenName;
@@ -31,7 +31,7 @@ struct pbmod_t {
 extern pbmod_t pbmod; //defined in CvInitCore.cpp 
 */
 
-//PB Mod End
+//PBMod End
 	
 class CvInitCore
 {

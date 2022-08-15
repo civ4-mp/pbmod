@@ -8331,13 +8331,13 @@ int CvCity::getCorporationCommerceByCorporation(CommerceTypes eIndex, Corporatio
 			}
 		}
 
-		// PB Mod  Reduce income if corporation is spreaded wide
+		// PBMod  Reduce income if corporation is spreaded wide
     if( iCommerce ){
         int factor100 = GC.getGameINLINE().getCorporationFactor100(getOwnerINLINE(), eCorporation);
         iCommerce *= factor100;
         iCommerce /= 100;
     }
-		// PB Mod END
+		// PBMod END
 
 	}
 

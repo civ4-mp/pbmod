@@ -605,14 +605,14 @@ void CvGame::reset(HandicapTypes eHandicap, bool bConstructorCall)
 			m_aiVoteTimer[iI] = 0;
 		}
 
-		// PB Mod
+		// PBMod
 		FAssertMsg(m_piCorpNumAlivePlayers==NULL, "about to leak memory, CvGame::m_piCorpNumAlivePlayers");
 		m_piCorpNumAlivePlayers = new int[GC.getNumCorporationInfos()];
 		for (iI = 0; iI < GC.getNumCorporationInfos(); iI++)
 		{
 			m_piCorpNumAlivePlayers[iI] = 0;
 		}
-		// PB Mod END
+		// PBMod END
 	}
 
 	m_deals.removeAll();
@@ -3868,7 +3868,7 @@ void CvGame::initMissingAdvancedStarts(){
 
 void CvGame::initScoreCalculation()
 {
-	initMissingAdvancedStarts(); // PB Mod
+	initMissingAdvancedStarts(); // PBMod
 
 	// initialize score calculation
 	int iMaxFood = 0;
@@ -5731,7 +5731,7 @@ void CvGame::doTurn()
 				kTeam.setTurnActive(true);
 				FAssert(getNumGameTurnActive() == kTeam.getAliveCount());
 
-				// PB Mod: Fix immediate turn flip in PBs with simultaneous rounds.
+				// PBMod: Fix immediate turn flip in PBs with simultaneous rounds.
 				// This break was accidential after the if-branch.
 				break;
 			}
@@ -9136,7 +9136,7 @@ bool CvGame::pythonIsBonusIgnoreLatitudes() const
 	return false;
 }
 
-// PB Mod 
+// PBMod 
 /*
  * For unknown reason the CvCity array m_abTradeRoute contain false-positive entries.
  * This cities are forever blocked as trade targets!
@@ -9472,7 +9472,7 @@ int CvGame::getCorporationCountPlayers(CorporationTypes eCorporation) const
 		return m_piCorpNumAlivePlayers[eCorporation];
 }
 
-// PB Mod  Reduce income if corporation is spreaded wide
+// PBMod  Reduce income if corporation is spreaded wide
 int CvGame::getCorporationFactor100(PlayerTypes ePlayer, CorporationTypes eCorporation, bool valForNextLocation) const
 {
 		return getCorporationFactor100_(
@@ -9506,4 +9506,4 @@ int CvGame::getCorporationFactor100_(int numCorpLocationsOfPlayer, int numPlayer
     	return factor100;
 }
 
-// PB Mod END
+// PBMod END

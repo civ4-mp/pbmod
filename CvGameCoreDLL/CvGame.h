@@ -562,7 +562,7 @@ public:
 
 	DllExport void handleDiplomacySetAIComment(DiploCommentTypes eComment) const;
 	DllExport bool isDiploScreenUp() const;
-	// PB Mod
+	// PBMod
 	void doControlWithoutWidget(ControlTypes eControl) const;
 	void fixTradeRoutes();
 	void changeCorporationCountPlayers(CorporationTypes eCorporation, PlayerTypes ePlayer, int iChange);
@@ -578,7 +578,7 @@ public:
 	int 	getNextTeamInTurnOrder(int iTeam); // cyclic, but with critical value MAX_TEAMS!
 	int 	getPrevTeamInTurnOrder(int iTeam);  // cyclic, but with critical value MAX_TEAMS!
 	int	swapTeamsInTurnOrder(int iTeamA, int iTeamB);
-	// PB Mod END
+	// PBMod END
 
 protected:
 	int m_iElapsedGameTurns;
@@ -682,7 +682,7 @@ protected:
 	int		m_iNumCultureVictoryCities;
 	int		m_eCultureVictoryCultureLevel;
 
-// PB Mod
+// PBMod
 	int* m_piCorpNumAlivePlayers; // Number of alive players for each corporation
 	// Array to change player order for !MPOPTION_SIMULTANEOUS_TURNS
 	int*	m_aiPlayerPermutationInTurnOrder; // MAX_PLAYERS+1 entries
@@ -690,7 +690,7 @@ protected:
 	// • Last player to move: MAX_PLAYERS == m_aiPlayerPermutationInTurnOrder[x]
 	// • First player to move: Array position MAX_PLAYERS
 	int*	m_aiTeamPermutationInTurnOrder;   // MAX_TEAMS+1 entries
-// PB Mod END
+// PBMod END
 // mod-updater
 	mutable bool m_bUpdaterShown;
 	mutable int m_iMainMenuDrawnCounter;

@@ -3044,7 +3044,7 @@ void CvPlayer::chooseTech(int iDiscover, CvWString szText, bool bFront)
 	CvPopupInfo* pInfo = new CvPopupInfo(BUTTONPOPUP_CHOOSETECH);
 	if (NULL != pInfo)
 	{
-		//PB Mod
+		//PBMod
 		//For Oracle double tech bugfix. Store if this player is logged in.
 		if ( gDLL->IsPitbossHost() && isConnected() ){
 			pInfo->setFlags(PBMOD_ADD_POPUP_FLAG(1));
@@ -11358,19 +11358,19 @@ void CvPlayer::changeHasCorporationCount(CorporationTypes eIndex, int iChange)
 
 	if (iChange != 0)
 	{
-		const int prevVal = m_paiHasCorporationCount[eIndex]; // PB Mod
+		const int prevVal = m_paiHasCorporationCount[eIndex]; // PBMod
 
 		m_paiHasCorporationCount[eIndex] += iChange;
 		FAssert(getHasCorporationCount(eIndex) >= 0);
 
-		// PB Mod
+		// PBMod
 		const int curVal = m_paiHasCorporationCount[eIndex];
 	if( (curVal > 0) && (prevVal == 0) ){
 				GC.getGameINLINE().changeCorporationCountPlayers(eIndex, m_eID, 1);
 	}else if( (curVal == 0) && (prevVal > 0) ){
 				GC.getGameINLINE().changeCorporationCountPlayers(eIndex, m_eID, -1);
 	}
-		// PB Mod END
+		// PBMod END
 
 		GC.getGameINLINE().updateBuildingCommerce();
 
@@ -13313,7 +13313,7 @@ int CvPlayer::getEspionageMissionBaseCost(EspionageMissionTypes eMission, Player
 	}
 	else if (kMission.getCounterespionageMod() > 0)
 	{
-		if (GET_TEAM(getTeam()).getCounterespionageTurnsLeftAgainstTeam(GET_PLAYER(eTargetPlayer).getTeam()) <= 1 /*0 */) // PB Mod: Allow Counterespionage in last running round
+		if (GET_TEAM(getTeam()).getCounterespionageTurnsLeftAgainstTeam(GET_PLAYER(eTargetPlayer).getTeam()) <= 1 /*0 */) // PBMod: Allow Counterespionage in last running round
 		{
 			iMissionCost = (iBaseMissionCost * GC.getGameSpeedInfo(GC.getGameINLINE().getGameSpeedType()).getResearchPercent()) / 100;
 		}
@@ -13967,7 +13967,7 @@ void CvPlayer::doAdvancedStartAction(AdvancedStartActionTypes eAction, int iX, i
 		switch (eAction)
 		{
 		case ADVANCEDSTARTACTION_EXIT:
-			// PB Mod: Omit AI spending points at logoff.
+			// PBMod: Omit AI spending points at logoff.
 			if ((GC.getGameINLINE().isPitboss()) && isHuman()){
 				return; // Allows player to login again
 			}
