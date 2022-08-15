@@ -570,6 +570,14 @@ public:
 	int getCorporationFactor100(PlayerTypes ePlayer, CorporationTypes eCorporation,
 					bool valForNextLocation = false) const;
 	int getCorporationFactor100_(int numCorpLocationsOfPlayer, int numPlayersWithCorp, CorporationTypes eCorporation) const;
+	int 	getNextPlayerInTurnOrder(int iPlayer); // cyclic, but with critical value MAX_PLAYERS!
+	int 	getPrevPlayerInTurnOrder(int iPlayer); // cyclic, but with critical value MAX_PLAYERS!
+	int	swapPlayersInTurnOrder(int iPlayerA, int iPlayerB);
+
+	// PBMod: Like above for simultaneous team moves
+	int 	getNextTeamInTurnOrder(int iTeam); // cyclic, but with critical value MAX_TEAMS!
+	int 	getPrevTeamInTurnOrder(int iTeam);  // cyclic, but with critical value MAX_TEAMS!
+	int	swapTeamsInTurnOrder(int iTeamA, int iTeamB);
 	// PB Mod END
 
 protected:
@@ -676,6 +684,12 @@ protected:
 
 // PB Mod
 	int* m_piCorpNumAlivePlayers; // Number of alive players for each corporation
+	// Array to change player order for !MPOPTION_SIMULTANEOUS_TURNS
+	int*	m_aiPlayerPermutationInTurnOrder; // MAX_PLAYERS+1 entries
+	// Note for start and abort conditions!!
+	// • Last player to move: MAX_PLAYERS == m_aiPlayerPermutationInTurnOrder[x]
+	// • First player to move: Array position MAX_PLAYERS
+	int*	m_aiTeamPermutationInTurnOrder;   // MAX_TEAMS+1 entries
 // PB Mod END
 // mod-updater
 	mutable bool m_bUpdaterShown;

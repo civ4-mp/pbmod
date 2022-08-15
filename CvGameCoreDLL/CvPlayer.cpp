@@ -9821,7 +9821,8 @@ void CvPlayer::setTurnActive(bool bNewValue, bool bDoTurn)
 					{
 						if (!GET_TEAM(getTeam()).isTurnActive())
 						{
-							for (iI = (getTeam() + 1); iI < MAX_TEAMS; iI++)
+							//for (iI = (getTeam() + 1); iI < MAX_TEAMS; iI++)
+							for (iI = GC.getGameINLINE().getNextTeamInTurnOrder(getTeam()); iI < MAX_TEAMS; iI = GC.getGameINLINE().getNextTeamInTurnOrder(iI))
 							{
 								if (GET_TEAM((TeamTypes)iI).isAlive())
 								{
@@ -9833,7 +9834,8 @@ void CvPlayer::setTurnActive(bool bNewValue, bool bDoTurn)
 					}
 					else
 					{
-						for (iI = (getID() + 1); iI < MAX_PLAYERS; iI++)
+						//for (iI = (getID() + 1); iI < MAX_PLAYERS; iI++)
+						for (iI = GC.getGameINLINE().getNextPlayerInTurnOrder(getID()); iI < MAX_PLAYERS; iI = GC.getGameINLINE().getNextPlayerInTurnOrder(iI))
 						{
 							if (GET_PLAYER((PlayerTypes)iI).isAlive())
 							{

@@ -276,6 +276,10 @@ void CyGamePythonInterface()
 		.def("setAdminPassword", &CyGame::setAdminPassword, "int (const char *szNewPw, const char *szAdminPw) - Allows change of admin password over webinterface")
 		.def("fixTradeRoutes", &CyGame::fixTradeRoutes, "void (void) - Re-evauate used cities in trade routes.")
 		.def("getCorporationFactor100", &CyGame::getCorporationFactor100_, "int (int numCorpLocationsOfPlayer, int numPlayersWithCorp, int (CorporationTypes) eCorporation) - Percent modifier for corporation yield in relation to its distribution.")
+		.def("swapPlayersInTurnOrder", &CyGame::swapPlayersInTurnOrder, "int (int iPlayerA, int iPlayerB) - Swap two player ids in movement order.")
+		.def("getPlayersInTurnOrder", &CyGame::getPlayersInTurnOrder, "list(int) (void) - Order of player ids if sequential turn option is active")
+		.def("swapTeamsInTurnOrder", &CyGame::swapTeamsInTurnOrder, "int (int iTeamA, int iTeamB) - Swap two team ids in movement order.")
+		.def("getTeamsInTurnOrder", &CyGame::getTeamsInTurnOrder, "list(int) (void) - Order of team ids if sequential turn option is active")
 		;
 
 	python::class_<CyDeal>("CyDeal")

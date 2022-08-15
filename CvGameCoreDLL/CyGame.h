@@ -288,6 +288,10 @@ public:
 	void fixTradeRoutes();
 	int getCorporationFactor100_(int numCorpLocationsOfPlayer, int numPlayersWithCorp,
 				int /*CorporationTypes*/ eCorporation) const;
+	int swapPlayersInTurnOrder(int iPlayerA, int iPlayerB);
+	boost::python::list getPlayersInTurnOrder();
+	int swapTeamsInTurnOrder(int iTeamA, int iTeamB);
+	boost::python::list getTeamsInTurnOrder();
 
 protected:
 	CvGame* m_pGame;

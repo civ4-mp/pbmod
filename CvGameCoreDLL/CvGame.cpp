@@ -67,6 +67,9 @@ CvGame::CvGame()
 	m_aiShrineBuilding = NULL;
 	m_aiShrineReligion = NULL;
 
+	m_aiPlayerPermutationInTurnOrder = NULL;
+	m_aiTeamPermutationInTurnOrder = NULL;
+
   m_piCorpNumAlivePlayers = NULL;
 
 	reset(NO_HANDICAP, true);
@@ -366,6 +369,8 @@ void CvGame::regenerateMap()
 
 void CvGame::uninit()
 {
+	SAFE_DELETE_ARRAY(m_aiPlayerPermutationInTurnOrder);
+	SAFE_DELETE_ARRAY(m_aiTeamPermutationInTurnOrder);
   SAFE_DELETE_ARRAY(m_piCorpNumAlivePlayers);
 
 	SAFE_DELETE_ARRAY(m_aiShrineBuilding);
@@ -575,6 +580,20 @@ void CvGame::reset(HandicapTypes eHandicap, bool bConstructorCall)
 			m_aiShrineBuilding[iI] = (int) NO_BUILDING;
 			m_aiShrineReligion[iI] = (int) NO_RELIGION;
 		}
+
+		// f(x) := x+1 % (MAX_PLAYERS+1)
+		m_aiPlayerPermutationInTurnOrder = new int[MAX_PLAYERS+1];
+		for(iI = 0; iI < MAX_PLAYERS; ++iI){
+			m_aiPlayerPermutationInTurnOrder[iI] = iI + 1;
+		}
+		m_aiPlayerPermutationInTurnOrder[MAX_PLAYERS] = 0; // First player to move after turn begins
+
+		// f(x) := x+1 % (MAX_TEAMS+1)
+		m_aiTeamPermutationInTurnOrder = new int[MAX_TEAMS+1];
+		for(iI = 0; iI < MAX_TEAMS; ++iI){
+			m_aiTeamPermutationInTurnOrder[iI] = iI + 1;
+		}
+		m_aiTeamPermutationInTurnOrder[MAX_TEAMS] = 0; // First team to move after turn begins
 
 		FAssertMsg(m_aiSecretaryGeneralTimer==NULL, "about to leak memory, CvGame::m_aiSecretaryGeneralTimer");
 		FAssertMsg(m_aiVoteTimer==NULL, "about to leak memory, CvGame::m_aiVoteTimer");
@@ -5703,7 +5722,8 @@ void CvGame::doTurn()
 	}
 	else if (isSimultaneousTeamTurns())
 	{
-		for (iI = 0; iI < MAX_TEAMS; iI++)
+		//for (iI = 0; iI < MAX_TEAMS; iI++)
+		for (iI = getNextTeamInTurnOrder(MAX_TEAMS); iI < MAX_TEAMS; iI = getNextTeamInTurnOrder(iI))
 		{
 			CvTeam& kTeam = GET_TEAM((TeamTypes)iI);
 			if (kTeam.isAlive())
@@ -5719,7 +5739,8 @@ void CvGame::doTurn()
 	}
 	else
 	{
-		for (iI = 0; iI < MAX_PLAYERS; iI++)
+		//for (iI = 0; iI < MAX_PLAYERS; iI++)
+		for (iI = getNextPlayerInTurnOrder(MAX_PLAYERS); iI < MAX_PLAYERS; iI = getNextPlayerInTurnOrder(iI))
 		{
 			if (GET_PLAYER((PlayerTypes)iI).isAlive())
 			{
@@ -7788,6 +7809,11 @@ void CvGame::read(FDataStreamBase* pStream)
 	pStream->Read(GC.getNumCorporationInfos(), m_piCorpNumAlivePlayers);
 	pStream->Read(&m_iNumCultureVictoryCities);
 	pStream->Read(&m_eCultureVictoryCultureLevel);
+
+	if (uiFlag > 1) {
+		pStream->Read(MAX_PLAYERS + 1, m_aiPlayerPermutationInTurnOrder);
+		pStream->Read(MAX_TEAMS + 1, m_aiTeamPermutationInTurnOrder);
+	}
 }
 
 
@@ -7795,7 +7821,7 @@ void CvGame::write(FDataStreamBase* pStream)
 {
 	int iI;
 
-	uint uiFlag=1;
+	uint uiFlag=2;
 	pStream->Write(uiFlag);		// flag for expansion
 
 	pStream->Write(m_iElapsedGameTurns);
@@ -7945,6 +7971,8 @@ void CvGame::write(FDataStreamBase* pStream)
 	pStream->Write(GC.getNumCorporationInfos(), m_piCorpNumAlivePlayers);
 	pStream->Write(m_iNumCultureVictoryCities);
 	pStream->Write(m_eCultureVictoryCultureLevel);
+  pStream->Write(MAX_PLAYERS + 1, m_aiPlayerPermutationInTurnOrder);
+  pStream->Write(MAX_TEAMS + 1, m_aiTeamPermutationInTurnOrder);
 }
 
 void CvGame::writeReplay(FDataStreamBase& stream, PlayerTypes ePlayer)
@@ -9174,6 +9202,237 @@ void CvGame::fixTradeRoutes()
 		gDLL->messageControlLog(szOut);
 	}
 }
+
+
+int CvGame::getNextPlayerInTurnOrder(int iPlayer){
+	FAssert(m_aiPlayerPermutationInTurnOrder != NULL);
+	FAssert(iPlayer >= 0 && iPlayer < MAX_PLAYERS + 1);
+	return m_aiPlayerPermutationInTurnOrder[iPlayer];  // Could be MAX_PLAYERS
+}
+
+int	CvGame::getPrevPlayerInTurnOrder(int iPlayer){
+	FAssert(m_aiPlayerPermutationInTurnOrder != NULL);
+	FAssert(iPlayer >= 0 && iPlayer < MAX_PLAYERS + 1);
+	int iBack;
+	for (iBack = 0; iBack<MAX_PLAYERS; ++iBack){
+		if (m_aiPlayerPermutationInTurnOrder[iBack] == iPlayer){
+			break;
+		}
+	}
+	FAssert(iBack < MAX_PLAYERS + 1);
+	return iBack;  // Could be MAX_PLAYERS
+}
+
+int CvGame::swapPlayersInTurnOrder(int iPlayerA, int iPlayerB){
+	/* Swap two positions of permutation array.
+	 *
+	 * Structure before:
+	 * PrevA -> iPlayerA -> NextA
+	 * PrevB => iPlayerB => NextB
+	 *
+	 * Structure after
+	 * PrevA -> iPlayerB -> NextA
+	 * PrevB => iPlayerA => NextB
+	 *
+	 * Note that iPlayerB can be NextA, etc…
+	 *
+	 * Array position MAX_PLAYERS is locked.
+	 */
+
+	FAssert(m_aiPlayerPermutationInTurnOrder != NULL);
+	FAssert(-1 < iPlayerA && iPlayerA < MAX_PLAYERS);
+	FAssert(-1 < iPlayerB && iPlayerB < MAX_PLAYERS);
+
+	if (iPlayerA == MAX_PLAYERS || iPlayerB == MAX_PLAYERS) return -1;
+	if (iPlayerA == iPlayerB) return 0;
+	if (isMPOption(MPOPTION_SIMULTANEOUS_TURNS)){
+		gDLL->logMsg("app.log", "WRN: Call of swapPlayersInTurnOrder has no effect if player moves simultaneously.");
+	}
+
+	/* Check relation of turn active player (TA) towards intervall given
+	 * by both players [a,b] and the permutation array.
+	 * Note that TA is not the same like A:=getActivePlayer().
+	 *
+	 * You can not swap players if TA is in (a,b].
+	 * if TA==a, the active status will transfered on player b.
+	 */
+	int iTurnActivePlayer = -1;
+	int iP=getNextPlayerInTurnOrder(MAX_PLAYERS);
+	bool hitLeftBorder(false), hitRightBorder(false);
+	for ( ;	iP < MAX_PLAYERS; iP = getNextPlayerInTurnOrder(iP)){
+		if (iPlayerB == iP){
+			if (!hitLeftBorder){
+				int iSwap = iPlayerA; iPlayerA = iPlayerB; iPlayerB = iSwap;  // (*)
+			} else {
+				hitRightBorder = true;
+			}
+		}
+		if ( iPlayerA == iP ) hitLeftBorder = true;
+
+		if (GET_PLAYER((PlayerTypes)iP).isTurnActive()){
+			iTurnActivePlayer = iP;
+			break;
+		}
+	}
+
+	if (!isMPOption(MPOPTION_SIMULTANEOUS_TURNS) && !isSimultaneousTeamTurns()){
+		// => Just one player has active turn status
+		if ( hitLeftBorder && iTurnActivePlayer != iPlayerA &&
+				!hitRightBorder || (hitRightBorder && iTurnActivePlayer == iPlayerB) ){
+			gDLL->logMsg("app.log", "ERR: Call swapPlayersInTurnOrder before first player ends turn or after second player ends turn.");
+			return -1;
+		}
+	
+		if (GET_PLAYER((PlayerTypes) iPlayerA).isTurnActive()){
+			GET_PLAYER((PlayerTypes) iPlayerA).setTurnActive(false, false);
+			GET_PLAYER((PlayerTypes) iPlayerB).setTurnActive(true, false);	
+		}
+
+		if (getActivePlayer() == iPlayerA) {
+			setActivePlayer((PlayerTypes)iPlayerB, true);
+		}
+	}
+
+  // Finally, apply the swap in the permutation array.
+	int iPrevA = getPrevPlayerInTurnOrder(iPlayerA);
+	int iNextA = getNextPlayerInTurnOrder(iPlayerA);
+	int iPrevB = getPrevPlayerInTurnOrder(iPlayerB);
+	int iNextB = getNextPlayerInTurnOrder(iPlayerB);
+
+	if (iNextA == iPlayerB){
+		m_aiPlayerPermutationInTurnOrder[iPrevA] = iPlayerB;
+		m_aiPlayerPermutationInTurnOrder[iPlayerB] = iPlayerA;
+		m_aiPlayerPermutationInTurnOrder[iPlayerA] = iNextB;
+	}else if(iNextB == iPlayerA){  // not possible case due (*).
+		m_aiPlayerPermutationInTurnOrder[iPrevB] = iPlayerA;
+		m_aiPlayerPermutationInTurnOrder[iPlayerA] = iPlayerB;
+		m_aiPlayerPermutationInTurnOrder[iPlayerB] = iNextA;
+	}else {
+		m_aiPlayerPermutationInTurnOrder[iPrevA] = iPlayerB;
+		m_aiPlayerPermutationInTurnOrder[iPlayerB] = iNextA;
+		m_aiPlayerPermutationInTurnOrder[iPrevB] = iPlayerA;
+		m_aiPlayerPermutationInTurnOrder[iPlayerA] = iNextB;
+	}
+
+	return 0;
+}
+
+int CvGame::getNextTeamInTurnOrder(int iTeam){
+	FAssert(m_aiTeamPermutationInTurnOrder != NULL);
+	FAssert(iTeam >= 0 && iTeam < MAX_TEAMS + 1);
+	return m_aiTeamPermutationInTurnOrder[iTeam];  // Could be MAX_TEAMS
+}
+
+int	CvGame::getPrevTeamInTurnOrder(int iTeam){
+	FAssert(m_aiTeamPermutationInTurnOrder != NULL);
+	FAssert(iTeam >= 0 && iTeam < MAX_TEAMS + 1);
+	int iBack;
+	for (iBack = 0; iBack<MAX_TEAMS+1; ++iBack){
+		if (m_aiTeamPermutationInTurnOrder[iBack] == iTeam){
+			break;
+		}
+	}
+	FAssert(-1 < iBack);
+	FAssert(iBack < MAX_TEAMS + 1);
+	return iBack;  // Could be MAX_TEAMS
+}
+
+int CvGame::swapTeamsInTurnOrder(int iTeamA, int iTeamB){
+	/* Swap two positions of permutation array.
+	 *
+	 * Structure before:
+	 * PrevA -> iTeamA -> NextA
+	 * PrevB => iTeamB => NextB
+	 *
+	 * Structure after
+	 * PrevA -> iTeamB -> NextA
+	 * PrevB => iTeamA => NextB
+	 *
+	 * Note that iTeamB can be NextA, etc…
+	 *
+	 * Array position MAX_TEAMS is locked.
+	 */
+
+	FAssert(m_aiTeamPermutationInTurnOrder != NULL);
+	FAssert(-1 < iTeamA && iTeamA < MAX_TEAMS);
+	FAssert(-1 < iTeamB && iTeamB < MAX_TEAMS);
+
+	if (iTeamA == MAX_TEAMS || iTeamB == MAX_TEAMS) return -1;
+	if (iTeamA == iTeamB) return 0;
+	if (!isSimultaneousTeamTurns()){
+		gDLL->logMsg("app.log", "WRN: Call of swapTeamsInTurnOrder has no effect without simultaneous team turns.");
+	}
+
+	/* Check relation of turn active team (TA) towards intervall given
+	 * by both teams [a,b] and the permutation array.
+	 * Note that TA is not the same like A:=getActiveTeam().
+	 *
+	 * You can not swap teams if TA is in (a,b].
+	 * if TA==a, the active status will transfered on team b.
+	 */
+	int iTurnActiveTeam = -1;
+	int iT=getNextTeamInTurnOrder(MAX_TEAMS);
+	bool hitLeftBorder(false), hitRightBorder(false);
+	for ( ;	iT < MAX_TEAMS; iT = getNextTeamInTurnOrder(iT)){
+		if (iTeamB == iT){
+			if (!hitLeftBorder){
+				int iSwap = iTeamA; iTeamA = iTeamB; iTeamB = iSwap;  // (*)
+			} else {
+				hitRightBorder = true;
+			}
+		}
+		if ( iTeamA == iT ) hitLeftBorder = true;
+
+		if (GET_TEAM((TeamTypes)iT).isTurnActive()){
+			iTurnActiveTeam = iT;
+			break;
+		}
+	}
+
+	if (isSimultaneousTeamTurns()){
+		// => Just one team has active turn status
+		if ( hitLeftBorder && iTurnActiveTeam != iTeamA &&
+				!hitRightBorder || (hitRightBorder && iTurnActiveTeam == iTeamB) ){
+			gDLL->logMsg("app.log", "ERR: Call swapTeamsInTurnOrder before first team ends turn or after second team ends turn.");
+			return -1;
+		}
+	
+		// Here, I assume that all players of a team has the same isTurnActive status. I'm not sure,
+		// if this assumption holds. The CvTeam.isTurnActive just checks one player…
+		if (GET_TEAM((TeamTypes) iTeamA).isTurnActive()){
+			GET_TEAM((TeamTypes) iTeamA).setTurnActive(false, false);
+			GET_TEAM((TeamTypes) iTeamB).setTurnActive(true, false);	
+		}
+
+		if (getActiveTeam() == iTeamA) {
+			setActivePlayer((PlayerTypes) GET_TEAM((TeamTypes)iTeamB).getLeaderID(), true);
+		}
+	}
+
+  // Finally, apply the swap in the permutation array.
+	int iPrevA = getPrevTeamInTurnOrder(iTeamA);
+	int iNextA = getNextTeamInTurnOrder(iTeamA);
+	int iPrevB = getPrevTeamInTurnOrder(iTeamB);
+	int iNextB = getNextTeamInTurnOrder(iTeamB);
+
+	if (iNextA == iTeamB){
+		m_aiTeamPermutationInTurnOrder[iPrevA] = iTeamB;
+		m_aiTeamPermutationInTurnOrder[iTeamB] = iTeamA;
+		m_aiTeamPermutationInTurnOrder[iTeamA] = iNextB;
+	}else if(iNextB == iTeamA){  // not possible case due (*).
+		m_aiTeamPermutationInTurnOrder[iPrevB] = iTeamA;
+		m_aiTeamPermutationInTurnOrder[iTeamA] = iTeamB;
+		m_aiTeamPermutationInTurnOrder[iTeamB] = iNextA;
+	}else {
+		m_aiTeamPermutationInTurnOrder[iPrevA] = iTeamB;
+		m_aiTeamPermutationInTurnOrder[iTeamB] = iNextA;
+		m_aiTeamPermutationInTurnOrder[iPrevB] = iTeamA;
+		m_aiTeamPermutationInTurnOrder[iTeamA] = iNextB;
+	}
+
+	return 0;
+}
+
 
 void CvGame::changeCorporationCountPlayers(CorporationTypes eCorporation, PlayerTypes ePlayer, int iChange)
 {
