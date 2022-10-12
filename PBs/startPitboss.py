@@ -64,8 +64,10 @@ START_WINDOWS = '{CIV4BTS_EXE} mod= "{MOD}"\\" /ALTROOT={ALTROOT}"'
 START_LINUX = 'wine "{CIV4BTS_EXE}" mod= "{MOD}"\\\" /ALTROOT="{ALTROOT_W}"'
 
 # Update command (For mods with ModUpdater.py)
-UPDATE_WINDOWS = 'python {SCRIPT} {ARGS}'
-UPDATE_LINUX = 'python {SCRIPT} {ARGS}'
+# Note that this script needs Python2 because it is used inside of Civ4, too.
+# Syntax is not compatible with Python3.
+UPDATE_WINDOWS = 'python2 {SCRIPT} {ARGS}'
+UPDATE_LINUX = 'python2 {SCRIPT} {ARGS}'
 UPDATE_SCRIPT = 'ModUpdater.py'
 
 # Variant with cleaned output
@@ -753,7 +755,7 @@ def prepare_update(gameid, pbSettings, mod_name):
             ARGS="--force" if isForcedAutostart(pbSettings) else "")
 
     if not os.path.isdir(mod_folder):
-        print("(ModUpdater) Mod folder not found. Is the path correctly?\n"
+        print("(ModUpdater) Mod folder not found. Is the path correct?\n"
               "'{}'\n".format(mod_folder))
         return -3
     elif not os.path.isfile(os.path.join(mod_folder, script_rel_path)):
