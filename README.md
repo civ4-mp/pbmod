@@ -126,7 +126,7 @@ Visit http://realmsbeyond.net/forums/showthread.php?tid=7123 (English) or
 http://civ-wiki.de/wiki/Mehrspieler_(Civ4) (German) for more information.
 
 3. The repo https://github.com/civ4-mp/save-over-http provides our solution for the incredible slow loading of
-Pitboss games. We extended the Civ4:BTS executable and reelease the file transfer
+Pitboss games. We extended the Civ4:BTS executable and release the file transfer
 from Civ4 to an external library (libcurl). The external library downloads the save
 over http(s).
 
@@ -134,3 +134,17 @@ Information (German): https://civ-wiki.de/wiki/Pitboss_(Civ4)#Login_der_Spieler_
 Prebuild binaries:  https://civ.zulan.net/pb/BTS_Wrapper_v9_with_gamespy_fix.zip
 
 4. https://github.com/civ4-mp/mod-updater
+
+5. Building DLL with Wine.
+ Civfanatics user bluepotato wrote a script for compiling the DLL on Linux, see
+ https://forums.civfanatics.com/threads/compiling-the-dll-on-linux.658833/
+
+ We expanded this building script by an installation script of the required
+ SDK files.
+ To create a new wineprefix and downloading the required files, use. 
+ ```test/sdk/setup_dll_build_with_wine.sh [install|unattended]
+ ```
+
+ Then, compile the DLL with
+ ```CvGameCoreDLL/compile.sh [debug|release]
+ ```

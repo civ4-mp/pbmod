@@ -10,3 +10,5 @@
 venv
 CvGameCoreDLL.sdf
 PB Mod_v9/PB Mod_*.ini
+tests/sdk/setup_dll_build_with_wine.config
+tests/sdk/.*
