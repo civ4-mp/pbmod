@@ -176,8 +176,9 @@ void CvNetTurnIncomplete::Execute()
 {
 	if (m_ePlayer != NO_PLAYER)
 	{
-		//GET_PLAYER(m_ePlayer).setEndTurn(false);
-		GET_PLAYER(m_ePlayer).setTurnActive(true);
+		// 2023, Ramk: Second argument needed to avoid double spending
+		// of player income (e.g. production in cities).
+		GET_PLAYER(m_ePlayer).setTurnActive(true, false);
 	}
 }
 
