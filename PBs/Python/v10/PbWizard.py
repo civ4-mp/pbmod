@@ -1476,8 +1476,20 @@ class StartupIFace(wx.App):
                           "detected. Enabling gui...")
             self.bGui = True
 
-        if self.bShell:  # and not self.bAutostart: # wird in OnInit gestoppt, falls laden von save klappte
-            self.init_shell()
+        if (self.bShell
+            # TODO: Workaround for error on Windows:
+            #       If we starting shell here we need to stop
+            #       it and re-start it in PbAdmin.py. This
+            #       fails on windows because we use 
+            #          socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(
+            #              self.s.getsockname())
+            #       after
+            #          self.conn.shutdown(socket.SHUT_RD)
+            #       in Civ4ShellBackend.py
+            and not os.name == 'nt'
+            # and not self.bAutostart
+           ):
+            self.init_shell() # wird in OnInit gestoppt, falls laden von save klappte
 
         super(StartupIFace, self).__init__(arg)
 
