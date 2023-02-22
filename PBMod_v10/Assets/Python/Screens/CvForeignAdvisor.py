@@ -18,6 +18,7 @@ FOREIGN_RELATIONS_SCREEN = 2
 FOREIGN_ACTIVE_TRADE_SCREEN = 3
 NUM_FOREIGN_SCREENS = 4
 
+
 class CvForeignAdvisor:
 	"Foreign Advisor Screen"
 
@@ -58,7 +59,6 @@ class CvForeignAdvisor:
 		self.RADIUS_LEADER_ARC = 480
 		self.LINE_WIDTH = 6
 		self.BUTTON_SIZE = 64
-
 
 		self.iSelectedLeader = -1
 		self.iSelectedLeader2 = -1 #For relation subpage
@@ -107,7 +107,7 @@ class CvForeignAdvisor:
 		screen = self.getScreen()
 		if screen.isActive():
 			return
-		screen.setRenderInterfaceOnly(True);
+		screen.setRenderInterfaceOnly(True)
 		screen.showScreen( PopupStates.POPUPSTATE_IMMEDIATE, False)
 
 		if self.bReduceOnSelectedLeaders and self.iActiveLeader == -1:
@@ -623,7 +623,6 @@ class CvForeignAdvisor:
 		szLeaderName = u"<font=3>" + playerActive.getName() + u"</font>"
 		screen.setLabel(szName, "", szLeaderName, CvUtil.FONT_CENTER_JUSTIFY, self.X_LEADER_CIRCLE_TOP, fLeaderTop + iLeaderHeight + 5, 0, FontTypes.GAME_FONT, WidgetTypes.WIDGET_GENERAL, -1, -1)
 
-
 		# angle increment in radians (180 degree range)
 		if (iCount < 2):
 			deltaTheta = 0
@@ -753,41 +752,52 @@ class CvForeignAdvisor:
 									szName = self.getNextLineName()
 									screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), int(fX), int(fY), gc.getInfoTypeForString("COLOR_WHITE") )
 
-				"""
-				player = gc.getPlayer(self.iActiveLeader)
-				if (player.getTeam() == gc.getPlayer(iSelectedLeader).getTeam()):
-					szName = self.getNextLineName()
-					screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), self.X_LEADER_CIRCLE_TOP, fLeaderTop + iLeaderHeight/2, gc.getInfoTypeForString("COLOR_YELLOW") )
-				elif (gc.getTeam(player.getTeam()).isVassal(gc.getPlayer(iSelectedLeader).getTeam()) or gc.getTeam(gc.getPlayer(iSelectedLeader).getTeam()).isVassal(player.getTeam())):
-					szName = self.getNextLineName()
-					screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), self.X_LEADER_CIRCLE_TOP, fLeaderTop + iLeaderHeight/2, gc.getInfoTypeForString("COLOR_CYAN") )
-				elif (gc.getTeam(player.getTeam()).isHasMet(gc.getPlayer(iSelectedLeader).getTeam())):
-					if (gc.getTeam(player.getTeam()).isAtWar(gc.getPlayer(iSelectedLeader).getTeam())):
-						szName = self.getNextLineName()
-						screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), self.X_LEADER_CIRCLE_TOP, fLeaderTop + iLeaderHeight/2, gc.getInfoTypeForString("COLOR_RED") )
-					else:
-						bJustPeace = True
-						if (gc.getTeam(player.getTeam()).isOpenBorders(gc.getPlayer(iSelectedLeader).getTeam())):
-							fDy = fLeaderTop + iLeaderHeight/2 - fYSelected
-							fDx = self.X_LEADER_CIRCLE_TOP - fXSelected
-							fTheta = math.atan2(fDy, fDx)
-							if (fTheta > 0.5 * math.pi):
-								fTheta -= math.pi
-							elif (fTheta < -0.5 * math.pi):
-								fTheta += math.pi
-							fSecondLineOffsetY = self.LINE_WIDTH * math.cos(fTheta)
-							fSecondLineOffsetX = -self.LINE_WIDTH * math.sin(fTheta)
+				# PBMod, Fix 2023: Drawing line to player's leader, too.
+				for iPlayer in [self.iActiveLeader]:
+					# PB Mod, Omit double drawing of lines
+					#if( iPlayer > iSelectedLeader and iSelectedLeader in self.listSelectedLeaders ):
+					#	continue
+					if self.bReduceOnSelectedLeaders and not iPlayer in self.listSelectedLeaders:
+						continue
+
+					player = gc.getPlayer(iPlayer)
+					fX = self.X_LEADER_CIRCLE_TOP
+					fY = fLeaderTop + iLeaderHeight/2
+
+					# draw lines
+					if (iSelectedLeader != iPlayer):
+						if (player.getTeam() == gc.getPlayer(iSelectedLeader).getTeam()):
 							szName = self.getNextLineName()
-							screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected + fSecondLineOffsetX), int(fYSelected + fSecondLineOffsetY), int(self.X_LEADER_CIRCLE_TOP + fSecondLineOffsetX), int(fLeaderTop + iLeaderHeight/2 + fSecondLineOffsetY), gc.getInfoTypeForString("COLOR_CITY_GREEN") )
-							bJustPeace = False
-						if (gc.getTeam(player.getTeam()).isDefensivePact(gc.getPlayer(iSelectedLeader).getTeam())):
+							screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), int(fX), int(fY), gc.getInfoTypeForString("COLOR_YELLOW") )
+						elif (gc.getTeam(player.getTeam()).isVassal(gc.getPlayer(iSelectedLeader).getTeam()) or gc.getTeam(gc.getPlayer(iSelectedLeader).getTeam()).isVassal(player.getTeam())):
 							szName = self.getNextLineName()
-							screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), int(self.X_LEADER_CIRCLE_TOP), int(fLeaderTop + iLeaderHeight/2), gc.getInfoTypeForString("COLOR_BLUE") )
-							bJustPeace = False
-						if (bJustPeace and self.bShowRelationLines):
-							szName = self.getNextLineName()
-							screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), int(self.X_LEADER_CIRCLE_TOP), int(fLeaderTop + iLeaderHeight/2), gc.getInfoTypeForString("COLOR_WHITE") )
-				"""
+							screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), int(fX), int(fY), gc.getInfoTypeForString("COLOR_CYAN") )
+						elif (gc.getTeam(player.getTeam()).isHasMet(gc.getPlayer(iSelectedLeader).getTeam())):
+							if (gc.getTeam(player.getTeam()).isAtWar(gc.getPlayer(iSelectedLeader).getTeam())):
+								szName = self.getNextLineName()
+								screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), int(fX), int(fY), gc.getInfoTypeForString("COLOR_RED") )
+							else:
+								bJustPeace = True
+								if (gc.getTeam(player.getTeam()).isOpenBorders(gc.getPlayer(iSelectedLeader).getTeam())):
+									fDy = fYSelected - fY
+									fDx = fXSelected - fX
+									fTheta = math.atan2(fDy, fDx)
+									if (fTheta > 0.5 * math.pi):
+										fTheta -= math.pi
+									elif (fTheta < -0.5 * math.pi):
+										fTheta += math.pi
+									fSecondLineOffsetY = self.LINE_WIDTH * math.cos(fTheta)
+									fSecondLineOffsetX = -self.LINE_WIDTH * math.sin(fTheta)
+									szName = self.getNextLineName()
+									screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected + fSecondLineOffsetX), int(fYSelected + fSecondLineOffsetY), int(fX + fSecondLineOffsetX), int(fY + fSecondLineOffsetY), gc.getInfoTypeForString("COLOR_CITY_GREEN") )
+									bJustPeace = False
+								if (gc.getTeam(player.getTeam()).isDefensivePact(gc.getPlayer(iSelectedLeader).getTeam())):
+									szName = self.getNextLineName()
+									screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), int(fX), int(fY), gc.getInfoTypeForString("COLOR_BLUE") )
+									bJustPeace = False
+								if (bJustPeace and self.bShowRelationLines):
+									szName = self.getNextLineName()
+									screen.addLineGFC(self.BACKGROUND_ID, szName, int(fXSelected), int(fYSelected), int(fX), int(fY), gc.getInfoTypeForString("COLOR_WHITE") )
 
 		# PB Mod
 		self.newSelection = False
@@ -902,7 +912,6 @@ class CvForeignAdvisor:
 				-0.1, FontTypes.TITLE_FONT,
 				WidgetTypes.WIDGET_GENERAL, 301312, 4 )
 
-
 	# returns a unique ID for a widget in this screen
 	def getNextWidgetName(self):
 		szName = self.WIDGET_ID + str(self.nWidgetCount * NUM_FOREIGN_SCREENS + self.iScreen)
@@ -925,7 +934,6 @@ class CvForeignAdvisor:
 		for i in range(nLines):
 			screen.removeLineGFC(self.BACKGROUND_ID, self.getNextLineName())
 		self.nLineCount = 0
-
 
 	def deleteAllWidgets(self):
 		screen = self.getScreen()
@@ -968,4 +976,3 @@ class CvForeignAdvisor:
 			CyInterface().setDirty(InterfaceDirtyBits.Foreign_Screen_DIRTY_BIT, False)
 			self.drawContents(False)
 		return
-
