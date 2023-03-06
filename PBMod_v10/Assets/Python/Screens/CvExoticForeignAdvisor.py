@@ -209,7 +209,7 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 		screen = self.getScreen()
 		if screen.isActive():
 			return
-		screen.setRenderInterfaceOnly(True);
+		screen.setRenderInterfaceOnly(True)
 		screen.showScreen( PopupStates.POPUPSTATE_IMMEDIATE, False)
 	
 		self.iActiveLeader = CyGame().getActivePlayer()
@@ -277,7 +277,7 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 			return
 
 		# Link to other Foreign advisor screens
-		xLink = self.DX_LINK / 2;
+		xLink = self.DX_LINK / 2
 
 		for i in range (len (self.ORDER_LIST)):
 			szTextId = self.getNextWidgetName()
@@ -441,18 +441,16 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 						screen.setState(szName, True)
 					else:
 						screen.setState(szName, False)
-
-				else:
-					if (self.bGlancePlus):
-						nButtonStyle = ButtonStyles.BUTTON_STYLE_CITY_PLUS
-					else:
-						nButtonStyle = ButtonStyles.BUTTON_STYLE_CITY_MINUS						
-
-					#screen.addCheckBoxGFCAt(self.GLANCE_HEADER, self.GLANCE_BUTTON, "", "", self.X_GLANCE_OFFSET, self.Y_GLANCE_OFFSET, self.PLUS_MINUS_SIZE, self.PLUS_MINUS_SIZE, WidgetTypes.WIDGET_GENERAL, -1, -1, nButtonStyle, False)
-					screen.attachLabel(self.GLANCE_HEADER, "", "   ")
-					screen.attachCheckBoxGFC(self.GLANCE_HEADER, self.GLANCE_BUTTON, "", "", self.PLUS_MINUS_SIZE, self.PLUS_MINUS_SIZE, WidgetTypes.WIDGET_GENERAL, -1, -1, nButtonStyle)
-
 				nCount += 1
+
+				if (self.bGlancePlus):
+					nButtonStyle = ButtonStyles.BUTTON_STYLE_CITY_PLUS
+				else:
+					nButtonStyle = ButtonStyles.BUTTON_STYLE_CITY_MINUS						
+
+				#screen.addCheckBoxGFCAt(self.GLANCE_HEADER, self.GLANCE_BUTTON, "", "", self.X_GLANCE_OFFSET, self.Y_GLANCE_OFFSET, self.PLUS_MINUS_SIZE, self.PLUS_MINUS_SIZE, WidgetTypes.WIDGET_GENERAL, -1, -1, nButtonStyle, False)
+				screen.attachLabel(self.GLANCE_HEADER, "", "   ")
+				screen.attachCheckBoxGFC(self.GLANCE_HEADER, self.GLANCE_BUTTON, "", "", self.PLUS_MINUS_SIZE, self.PLUS_MINUS_SIZE, WidgetTypes.WIDGET_GENERAL, -1, -1, nButtonStyle)
 
 		self.drawGlanceRows (screen, mainPanelName, self.iSelectedLeader != self.iActiveLeader, self.iSelectedLeader)
 
@@ -621,8 +619,6 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 # 		self.RES_LEFT_RIGHT_SPACE = self.MIN_LEFT_RIGHT_SPACE
 # 		self.RES_TOP_BOTTOM_SPACE = self.MIN_TOP_BOTTOM_SPACE
 
-	
-		
 	def calculateSurplusPanelLayout(self):
 		self.SURPLUS_X = self.RES_LEFT_RIGHT_SPACE
 		self.SURPLUS_Y = self.RES_TOP_BOTTOM_SPACE
@@ -643,8 +639,6 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 		
 		self.SURPLUS_CIRCLE_X_START = self.SURPLUS_TABLE_X + 4
 		self.SURPLUS_CIRCLE_Y = self.SURPLUS_TABLE_Y + 5
-		
-
 		
 	def drawResourceDeals(self, bInitial):
 		screen = self.getScreen()
@@ -718,7 +712,6 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 			else:
 				amountStr = u"<font=3>" + str(amount) + "</font>"
 			screen.setTableText( self.availableTable, iIndex, 0, amountStr, "", WidgetTypes.WIDGET_GENERAL, -1, -1, 0 )
-		
 		
 		
 # 		# Assemble the panel that shows the trade table
@@ -826,13 +819,11 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 				currentRow += 1
 		self.resIconGrid.refresh()
 	
-	
 	def scrollTradeTableUp(self):
 		if (self.iScreen == self.SCREEN_DICT["BONUS"]):
 			self.resIconGrid.scrollUp()
 		elif (self.iScreen == self.SCREEN_DICT["TECH"]):
 			self.techIconGrid.scrollUp()
-
 
 	def scrollTradeTableDown(self):
 		if (self.iScreen == self.SCREEN_DICT["BONUS"]):
@@ -909,8 +900,6 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 				currentRow += 1
 		self.techIconGrid.refresh()
 													 
-
-
 	def initTechTable(self):
 		screen = self.getScreen()
 		
@@ -1043,10 +1032,9 @@ class CvExoticForeignAdvisor (CvForeignAdvisor.CvForeignAdvisor):
 					self.getScreen().hide("SelectionCircle")
 					self.drawContents(False)
 
-			 
 		elif (inputClass.getNotifyCode() == NotifyCode.NOTIFY_LISTBOX_ITEM_SELECTED):
 			if (inputClass.getFunctionName() + str(inputClass.getID()) == self.getWidgetName(self.DEBUG_DROPDOWN_ID)):
-				print 'debug dropdown event'
+				CvUtil.pyPrint('debug dropdown event')
 				szName = self.getWidgetName(self.DEBUG_DROPDOWN_ID)
 				iIndex = self.getScreen().getSelectedPullDownID(szName)
 				#self.iActiveLeader = self.getScreen().getPullDownData(szName, iIndex)
