@@ -10,10 +10,12 @@ fix_upload_bug/watchdog:
 	you do not use a headless linux environment.
 
 
-SaveOverHttp:
+GetSaveOverHttp:
 	Speed up the save game tranfer to lower the
 	login times. ( Without these changes is the
 	bandwidth limited to 10kb/s! )
+	
+	See: https://github.com/civ4-mp/save-over-http
 
 
 Pyconsole:
