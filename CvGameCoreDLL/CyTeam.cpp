@@ -228,6 +228,11 @@ bool CyTeam::isMinorCiv()
 	return m_pTeam ? m_pTeam->isMinorCiv() : false;
 }
 
+bool CyTeam::isWatchingCiv()
+{
+	return m_pTeam ? m_pTeam->isWatchingCiv() : false;
+}
+
 int /*PlayerTypes*/ CyTeam::getLeaderID()
 {
 	return m_pTeam ? m_pTeam->getLeaderID() : -1;

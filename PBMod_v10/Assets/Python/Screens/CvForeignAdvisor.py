@@ -277,7 +277,7 @@ class CvForeignAdvisor:
 				if (self.iSelectedLeader == self.iActiveLeader):
 					# loop through all players and display resources that are available to trade to at least one leader
 					for iLoopPlayer in range(gc.getMAX_PLAYERS()):
-						if (gc.getPlayer(iLoopPlayer).isAlive() and not gc.getPlayer(iLoopPlayer).isBarbarian() and not gc.getPlayer(iLoopPlayer).isMinorCiv() and gc.getTeam(gc.getPlayer(iLoopPlayer).getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam())):
+						if (gc.getPlayer(iLoopPlayer).isAlive() and not gc.getPlayer(iLoopPlayer).isBarbarian() and not gc.getPlayer(iLoopPlayer).isMinorCiv() and not gc.getPlayer(iLoopPlayer).isWatchingCiv() and gc.getTeam(gc.getPlayer(iLoopPlayer).getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam())):
 							if (iLoopPlayer != self.iActiveLeader and gc.getPlayer(self.iActiveLeader).canTradeItem(iLoopPlayer, tradeData, False)):
 								bTradeable = True
 								iLoopPlayer = gc.getMAX_PLAYERS() # exit for loop
@@ -298,7 +298,7 @@ class CvForeignAdvisor:
 				if (self.iSelectedLeader == self.iActiveLeader):
 					# loop through all players and display techs that are available to trade to at least one leader
 					for iLoopPlayer in range(gc.getMAX_PLAYERS()):
-						if (gc.getPlayer(iLoopPlayer).isAlive() and not gc.getPlayer(iLoopPlayer).isBarbarian() and not gc.getPlayer(iLoopPlayer).isMinorCiv() and gc.getTeam(gc.getPlayer(iLoopPlayer).getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam())):
+						if (gc.getPlayer(iLoopPlayer).isAlive() and not gc.getPlayer(iLoopPlayer).isBarbarian() and not gc.getPlayer(iLoopPlayer).isMinorCiv() and not gc.getPlayer(iLoopPlayer).isWatchingCiv() and gc.getTeam(gc.getPlayer(iLoopPlayer).getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam())):
 							if (iLoopPlayer != self.iActiveLeader and gc.getPlayer(self.iActiveLeader).canTradeItem(iLoopPlayer, tradeData, False)):
 								bTradeable = True
 								iLoopPlayer = gc.getMAX_PLAYERS() # exit for loop
@@ -321,7 +321,7 @@ class CvForeignAdvisor:
 
 		# Their leaderheads
 		for iLoopPlayer in range(gc.getMAX_PLAYERS()):
-			if (gc.getPlayer(iLoopPlayer).isAlive() and iLoopPlayer != self.iActiveLeader and (gc.getTeam(gc.getPlayer(iLoopPlayer).getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam()) or gc.getGame().isDebugMode()) and not gc.getPlayer(iLoopPlayer).isBarbarian() and not gc.getPlayer(iLoopPlayer).isMinorCiv()):
+			if (gc.getPlayer(iLoopPlayer).isAlive() and iLoopPlayer != self.iActiveLeader and (gc.getTeam(gc.getPlayer(iLoopPlayer).getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam()) or gc.getGame().isDebugMode()) and not gc.getPlayer(iLoopPlayer).isBarbarian() and not gc.getPlayer(iLoopPlayer).isMinorCiv() and not gc.getPlayer(iLoopPlayer).isWatchingCiv()):
 
 				currentPlayerPanelName = self.getNextWidgetName()
 				szPlayerName = gc.getPlayer(iLoopPlayer).getName()
@@ -424,7 +424,7 @@ class CvForeignAdvisor:
 		# Count all other leaders
 		for iPlayer in range(gc.getMAX_PLAYERS()):
 			player = gc.getPlayer(iPlayer)
-			if (player.isAlive() and iPlayer != self.iActiveLeader and (gc.getTeam(player.getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam()) or gc.getGame().isDebugMode()) and not player.isBarbarian() and not player.isMinorCiv()):
+			if (player.isAlive() and iPlayer != self.iActiveLeader and (gc.getTeam(player.getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam()) or gc.getGame().isDebugMode()) and not player.isBarbarian() and not player.isMinorCiv() and not player.isWatchingCiv()):
 				leaderMap[iPlayer] = iCount
 				iCount = iCount + 1
 		return leaderMap
@@ -457,7 +457,7 @@ class CvForeignAdvisor:
 			iPlayer = CyGame().getActivePlayer()
 
 		for iLoopPlayer in range(gc.getMAX_PLAYERS()):
-			if (gc.getPlayer(iLoopPlayer).isAlive() and iLoopPlayer != iPlayer and not gc.getPlayer(iLoopPlayer).isBarbarian() and  not gc.getPlayer(iLoopPlayer).isMinorCiv()):
+			if (gc.getPlayer(iLoopPlayer).isAlive() and iLoopPlayer != iPlayer and not gc.getPlayer(iLoopPlayer).isBarbarian() and not gc.getPlayer(iLoopPlayer).isMinorCiv() and not gc.getPlayer(iLoopPlayer).isWatchingCiv()):
 				#if not gc.getTeam(gc.getPlayer(iLoopPlayer).getTeam()).isHasMet(gc.getPlayer(self.iActiveLeader).getTeam()):
 				#		continue
 				if (gc.getTeam(gc.getPlayer(iLoopPlayer).getTeam()).isHasMet(gc.getPlayer(iPlayer).getTeam()) or gc.getGame().isDebugMode()):
@@ -686,7 +686,7 @@ class CvForeignAdvisor:
 
 		# draw lines
 		for iSelectedLeader in range(gc.getMAX_PLAYERS()):
-			bDisplayed = (not gc.getPlayer(iSelectedLeader).isBarbarian() and not gc.getPlayer(iSelectedLeader).isMinorCiv() and gc.getPlayer(iSelectedLeader).isAlive() and (gc.getGame().isDebugMode() or gc.getTeam(playerActive.getTeam()).isHasMet(gc.getPlayer(iSelectedLeader).getTeam())))
+			bDisplayed = (not gc.getPlayer(iSelectedLeader).isBarbarian() and not gc.getPlayer(iSelectedLeader).isMinorCiv() and not gc.getPlayer(iSelectedLeader).isWatchingCiv() and gc.getPlayer(iSelectedLeader).isAlive() and (gc.getGame().isDebugMode() or gc.getTeam(playerActive.getTeam()).isHasMet(gc.getPlayer(iSelectedLeader).getTeam())))
 			if( (iSelectedLeader in self.listSelectedLeaders or bNoLeadersSelected) and bDisplayed ):
 				# get selected player and location
 				if (iSelectedLeader in leaderMap):

@@ -595,7 +595,9 @@ public:
 	DllExport uint getTotalTimePlayed() const;																																// Exposed to Python			  
 																																																			
 	bool isMinorCiv() const;																																									// Exposed to Python			
-																																																			
+	bool isWatchingCiv() const;		// Exposed to Python
+	void CvPlayer::setWatchingCiv(bool bNewValue);
+
 	DllExport bool isAlive() const;																																						// Exposed to Python			
 	DllExport bool isEverAlive() const;																																				// Exposed to Python			
 	void setAlive(bool bNewValue);
@@ -1141,6 +1143,7 @@ protected:
 	uint m_uiStartTime;  // XXX save these?
 
 	bool m_bAlive;
+	bool m_bWatchingCiv;
 	bool m_bEverAlive;
 	bool m_bTurnActive;
 	bool m_bAutoMoves;

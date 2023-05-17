@@ -2520,6 +2520,31 @@ bool CvTeam::isMinorCiv() const
 	return bValid;
 }
 
+bool CvTeam::isWatchingCiv() const
+{
+	bool bValid;
+	int iI;
+
+	bValid = false;
+
+	for (iI = 0; iI < MAX_PLAYERS; iI++)
+	{
+		if (GET_PLAYER((PlayerTypes)iI).getTeam() == getID())
+		{
+			if (GET_PLAYER((PlayerTypes)iI).isWatchingCiv())
+			{
+				bValid = true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	return bValid;
+}
+
 
 PlayerTypes CvTeam::getLeaderID() const
 {
@@ -5253,6 +5278,10 @@ void CvTeam::testCircumnavigated()
 	int iX, iY;
 
 	if (isBarbarian())
+	{
+		return;
+	}
+	if (isWatchingCiv())
 	{
 		return;
 	}

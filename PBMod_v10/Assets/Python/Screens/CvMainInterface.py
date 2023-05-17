@@ -2802,6 +2802,7 @@ class CvMainInterface:
 			if (CyInterface().isScoresVisible() and not CyInterface().isCityScreenUp() and CyEngine().isGlobeviewUp() == False):
 
 				i = gc.getMAX_CIV_TEAMS() - 1
+				iActivePlayer = gc.getGame().getActivePlayer()
 				while (i > -1):
 					eTeam = gc.getGame().getRankTeam(i)
 
@@ -2809,24 +2810,27 @@ class CvMainInterface:
 						j = gc.getMAX_CIV_PLAYERS() - 1
 						while (j > -1):
 							ePlayer = gc.getGame().getRankPlayer(j)
+							pPlayer = gc.getPlayer(ePlayer)
 
-							if (not CyInterface().isScoresMinimized() or gc.getGame().getActivePlayer() == ePlayer):
-								if (gc.getPlayer(ePlayer).isAlive() and not gc.getPlayer(ePlayer).isMinorCiv()):
+							if (not CyInterface().isScoresMinimized() or iActivePlayer == ePlayer):
+								if (pPlayer.isAlive()
+									and not pPlayer.isMinorCiv()
+									and (not pPlayer.isWatchingCiv() or ePlayer == iActivePlayer)):
 
-									if (gc.getPlayer(ePlayer).getTeam() == eTeam):
+									if (pPlayer.getTeam() == eTeam):
 										szBuffer = u"<font=2>"
 
 										if (gc.getGame().isGameMultiPlayer()):
-											if (not (gc.getPlayer(ePlayer).isTurnActive())):
+											if (not (pPlayer.isTurnActive())):
 												szBuffer = szBuffer + "*"
 
 										if (not CyInterface().isFlashingPlayer(ePlayer) or CyInterface().shouldFlash(ePlayer)):
-											if (ePlayer == gc.getGame().getActivePlayer()):
-												szTempBuffer = u"%d: [<color=%d,%d,%d,%d>%s</color>]" %(gc.getGame().getPlayerScore(ePlayer), gc.getPlayer(ePlayer).getPlayerTextColorR(), gc.getPlayer(ePlayer).getPlayerTextColorG(), gc.getPlayer(ePlayer).getPlayerTextColorB(), gc.getPlayer(ePlayer).getPlayerTextColorA(), gc.getPlayer(ePlayer).getName())
+											if (ePlayer == iActivePlayer):
+												szTempBuffer = u"%d: [<color=%d,%d,%d,%d>%s</color>]" %(gc.getGame().getPlayerScore(ePlayer), pPlayer.getPlayerTextColorR(), pPlayer.getPlayerTextColorG(), pPlayer.getPlayerTextColorB(), pPlayer.getPlayerTextColorA(), pPlayer.getName())
 											else:
-												szTempBuffer = u"%d: <color=%d,%d,%d,%d>%s</color>" %(gc.getGame().getPlayerScore(ePlayer), gc.getPlayer(ePlayer).getPlayerTextColorR(), gc.getPlayer(ePlayer).getPlayerTextColorG(), gc.getPlayer(ePlayer).getPlayerTextColorB(), gc.getPlayer(ePlayer).getPlayerTextColorA(), gc.getPlayer(ePlayer).getName())
+												szTempBuffer = u"%d: <color=%d,%d,%d,%d>%s</color>" %(gc.getGame().getPlayerScore(ePlayer), pPlayer.getPlayerTextColorR(), pPlayer.getPlayerTextColorG(), pPlayer.getPlayerTextColorB(), pPlayer.getPlayerTextColorA(), pPlayer.getName())
 										else:
-											szTempBuffer = u"%d: %s" %(gc.getGame().getPlayerScore(ePlayer), gc.getPlayer(ePlayer).getName())
+											szTempBuffer = u"%d: %s" %(gc.getGame().getPlayerScore(ePlayer), pPlayer.getName())
 										szBuffer = szBuffer + szTempBuffer
 
 										if (gc.getTeam(eTeam).isAlive()):
@@ -2834,7 +2838,7 @@ class CvMainInterface:
 												szBuffer = szBuffer + (" ?")
 											if (gc.getTeam(eTeam).isAtWar(gc.getGame().getActiveTeam())):
 												szBuffer = szBuffer + "("  + localText.getColorText("TXT_KEY_CONCEPT_WAR", (), gc.getInfoTypeForString("COLOR_RED")).upper() + ")"
-											if (gc.getPlayer(ePlayer).canTradeNetworkWith(gc.getGame().getActivePlayer()) and (ePlayer != gc.getGame().getActivePlayer())):
+											if (pPlayer.canTradeNetworkWith(iActivePlayer) and (ePlayer != iActivePlayer)):
 												szTempBuffer = u"%c" %(CyGame().getSymbolID(FontSymbols.TRADE_CHAR))
 												szBuffer = szBuffer + szTempBuffer
 											if (gc.getTeam(eTeam).isOpenBorders(gc.getGame().getActiveTeam())):
@@ -2843,12 +2847,12 @@ class CvMainInterface:
 											if (gc.getTeam(eTeam).isDefensivePact(gc.getGame().getActiveTeam())):
 												szTempBuffer = u"%c" %(CyGame().getSymbolID(FontSymbols.DEFENSIVE_PACT_CHAR))
 												szBuffer = szBuffer + szTempBuffer
-											if (gc.getPlayer(ePlayer).getStateReligion() != -1):
-												if (gc.getPlayer(ePlayer).hasHolyCity(gc.getPlayer(ePlayer).getStateReligion())):
-													szTempBuffer = u"%c" %(gc.getReligionInfo(gc.getPlayer(ePlayer).getStateReligion()).getHolyCityChar())
+											if (pPlayer.getStateReligion() != -1):
+												if (pPlayer.hasHolyCity(pPlayer.getStateReligion())):
+													szTempBuffer = u"%c" %(gc.getReligionInfo(pPlayer.getStateReligion()).getHolyCityChar())
 													szBuffer = szBuffer + szTempBuffer
 												else:
-													szTempBuffer = u"%c" %(gc.getReligionInfo(gc.getPlayer(ePlayer).getStateReligion()).getChar())
+													szTempBuffer = u"%c" %(gc.getReligionInfo(pPlayer.getStateReligion()).getChar())
 													szBuffer = szBuffer + szTempBuffer
 											if (gc.getTeam(eTeam).getEspionagePointsAgainstTeam(gc.getGame().getActiveTeam()) < gc.getTeam(gc.getGame().getActiveTeam()).getEspionagePointsAgainstTeam(eTeam)):
 												szTempBuffer = u"%c" %(gc.getCommerceInfo(CommerceTypes.COMMERCE_ESPIONAGE).getChar())
@@ -2857,17 +2861,17 @@ class CvMainInterface:
 										bEspionageCanSeeResearch = False
 										for iMissionLoop in range(gc.getNumEspionageMissionInfos()):
 											if (gc.getEspionageMissionInfo(iMissionLoop).isSeeResearch()):
-												bEspionageCanSeeResearch = gc.getPlayer(gc.getGame().getActivePlayer()).canDoEspionageMission(iMissionLoop, ePlayer, None, -1)
+												bEspionageCanSeeResearch = gc.getPlayer(iActivePlayer).canDoEspionageMission(iMissionLoop, ePlayer, None, -1)
 												break
 
-										if (((gc.getPlayer(ePlayer).getTeam() == gc.getGame().getActiveTeam()) and (gc.getTeam(gc.getGame().getActiveTeam()).getNumMembers() > 1)) or (gc.getTeam(gc.getPlayer(ePlayer).getTeam()).isVassal(gc.getGame().getActiveTeam())) or gc.getGame().isDebugMode() or bEspionageCanSeeResearch):
-											if (gc.getPlayer(ePlayer).getCurrentResearch() != -1):
-												szTempBuffer = u"-%s (%d)" %(gc.getTechInfo(gc.getPlayer(ePlayer).getCurrentResearch()).getDescription(), gc.getPlayer(ePlayer).getResearchTurnsLeft(gc.getPlayer(ePlayer).getCurrentResearch(), True))
+										if (((pPlayer.getTeam() == gc.getGame().getActiveTeam()) and (gc.getTeam(gc.getGame().getActiveTeam()).getNumMembers() > 1)) or (gc.getTeam(pPlayer.getTeam()).isVassal(gc.getGame().getActiveTeam())) or gc.getGame().isDebugMode() or bEspionageCanSeeResearch):
+											if (pPlayer.getCurrentResearch() != -1):
+												szTempBuffer = u"-%s (%d)" %(gc.getTechInfo(pPlayer.getCurrentResearch()).getDescription(), pPlayer.getResearchTurnsLeft(pPlayer.getCurrentResearch(), True))
 												szBuffer = szBuffer + szTempBuffer
 										if (CyGame().isNetworkMultiPlayer()):
 											szBuffer = szBuffer + CyGameTextMgr().getNetStats(ePlayer)
 
-										if (gc.getPlayer(ePlayer).isHuman() and CyInterface().isOOSVisible()):
+										if (pPlayer.isHuman() and CyInterface().isOOSVisible()):
 											szTempBuffer = u" <color=255,0,0>* %s *</color>" %(CyGameTextMgr().getOOSSeeds(ePlayer))
 											szBuffer = szBuffer + szTempBuffer
 
@@ -2927,7 +2931,9 @@ class CvMainInterface:
 				self.iScoreRowsBackup = 0
 			for iPlayerX in xrange(gc.getMAX_CIV_PLAYERS()):
 				pPlayerX = gc.getPlayer(iPlayerX)
-				if pPlayerX.isAlive():
+				if (pPlayerX.isAlive()
+					and not pPlayerX.isMinorCiv()
+					and (not pPlayerX.isWatchingCiv() or iPlayerX == gc.getGame().getActivePlayer())):
 					iTeamX = pPlayerX.getTeam()
 					pTeamX = gc.getTeam(iTeamX)
 					if pTeamX.isHasMet(CyGame().getActiveTeam()) or CyGame().isDebugMode():

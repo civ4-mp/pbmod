@@ -1393,6 +1393,17 @@ bool CyPlayer::isMinorCiv()
 	return m_pPlayer ? m_pPlayer->isMinorCiv() : false;
 }
 
+bool CyPlayer::isWatchingCiv()
+{
+	return m_pPlayer ? m_pPlayer->isWatchingCiv() : false;
+}
+
+void CyPlayer::setWatchingCiv(bool bNewValue)
+{
+	if (m_pPlayer)
+		m_pPlayer->setWatchingCiv(bNewValue);
+}
+
 bool CyPlayer::isAlive() 
 {
 	return m_pPlayer ? m_pPlayer->isAlive() : false;

@@ -129,3 +129,7 @@ New in version 9.4 (PB Mod_v9, 2021)
 New in version 10 (PBMod_v10, 2022)
 • Finally remove space char in mod name ;)
 • Elephant strength reduced on 7.
+• Watching mode: Add 'WatchingCiv=1' to player in szenario file or call
+    gc.getPlayer(XXX).setWatchingCiv(True) to enable observer civ.
+	  This nation will not be displayed in Adivisors, etc. and can explore the map.
+
