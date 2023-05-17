@@ -313,12 +313,12 @@ class CvTeamDesc:
     def __init__(self):
         self.techTypes = ()
         self.aaiEspionageAgainstTeams = []
-        self.bContactWithTeamList = ()
-        self.bWarWithTeamList = ()
-        self.bPermanentWarPeaceList = ()
-        self.bOpenBordersWithTeamList = ()
-        self.bDefensivePactWithTeamList = ()
-        self.bVassalOfTeamList = ()
+        self.bContactWithTeamList = []
+        self.bWarWithTeamList = []
+        self.bPermanentWarPeaceList = []
+        self.bOpenBordersWithTeamList = []
+        self.bDefensivePactWithTeamList = []
+        self.bVassalOfTeamList = []
         self.projectType = []
         self.bRevealMap = 0
         self.iMasterPower = 0
@@ -495,32 +495,32 @@ class CvTeamDesc:
 
                 v = parser.findTokenValue(toks, "ContactWithTeam")
                 if v!=-1:
-                    self.bContactWithTeamList = self.bContactWithTeamList + (int(v),)
+                    self.bContactWithTeamList.append(int(v))
                     continue
 
                 v = parser.findTokenValue(toks, "AtWar")
                 if v!=-1:
-                    self.bWarWithTeamList = self.bWarWithTeamList + (int(v),)
+                    self.bWarWithTeamList.append(int(v))
                     continue
 
                 v = parser.findTokenValue(toks, "PermanentWarPeace")
                 if v!=-1:
-                    self.bPermanentWarPeaceList = self.bPermanentWarPeaceList + (int(v),)
+                    self.bPermanentWarPeaceList.append(int(v))
                     continue
 
                 v = parser.findTokenValue(toks, "OpenBordersWithTeam")
                 if v!=-1:
-                    self.bOpenBordersWithTeamList = self.bOpenBordersWithTeamList + (int(v),)
+                    self.bOpenBordersWithTeamList.append(int(v))
                     continue
 
                 v = parser.findTokenValue(toks, "DefensivePactWithTeam")
                 if v!=-1:
-                    self.bDefensivePactWithTeamList = self.bDefensivePactWithTeamList + (int(v),)
+                    self.bDefensivePactWithTeamList.append(int(v))
                     continue
 
                 v = parser.findTokenValue(toks, "VassalOfTeam")
                 if v!=-1:
-                    self.bVassalOfTeamList = self.bVassalOfTeamList + (int(v),)
+                    self.bVassalOfTeamList.append(int(v))
                     continue
 
                 v = parser.findTokenValue(toks, "ProjectType")
