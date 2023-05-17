@@ -6,7 +6,7 @@
 # vanilla BTS save with this mod.
 #
 # Requirements:
-#  Script use xdd and hexdump
+#  Script use xxd and hexdump
 #
 # Usage:
 # ./convertSavesToMod.sh {New mod name or \"\"} {Name of save} [Name of converted save]
