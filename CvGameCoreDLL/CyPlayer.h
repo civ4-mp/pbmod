@@ -327,6 +327,8 @@ public:
 	int getTechScore();
 	int getTotalTimePlayed();
 	bool isMinorCiv();
+	bool isWatchingCiv();
+	void setWatchingCiv(bool bNewValue);
 	bool isAlive();
 	bool isEverAlive();
 	bool isExtendedGame();

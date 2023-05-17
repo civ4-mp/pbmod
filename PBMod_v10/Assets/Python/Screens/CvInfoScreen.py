@@ -564,7 +564,7 @@ class CvInfoScreen:
         for iLoopPlayer in range(gc.getMAX_CIV_PLAYERS()):
             pLoopPlayer = gc.getPlayer(iLoopPlayer)
             iLoopPlayerTeam = pLoopPlayer.getTeam()
-            if (gc.getTeam(iLoopPlayerTeam).isEverAlive()):
+            if (gc.getTeam(iLoopPlayerTeam).isEverAlive() and not pLoopPlayer.isWatchingCiv()):
                 if (self.pActiveTeam.isHasMet(iLoopPlayerTeam) or CyGame().isDebugMode() or iEndGame != 0):
                     if (    iDemographicsMission == -1 or
                             self.pActivePlayer.canDoEspionageMission(iDemographicsMission, iLoopPlayer, None, -1) or
@@ -1093,6 +1093,16 @@ class CvInfoScreen:
         iHealthGameAverage = 0
         iNetTradeGameAverage = 0
 
+        iEconomy = 0
+        iIndustry = 0
+        iAgriculture = 0
+        iMilitary = 0
+        iLandArea = 0
+        iPopulation = 0
+        iHappiness = 0
+        iHealth = 0
+        iNetTrade = 0
+
         # Lists of Player values - will be used to determine rank, strength and average per city
         aiGroupEconomy = []
         aiGroupIndustry = []
@@ -1107,7 +1117,10 @@ class CvInfoScreen:
         # Loop through all players to determine Rank and relative Strength
         for iPlayerLoop in range(gc.getMAX_PLAYERS()):
 
-            if (gc.getPlayer(iPlayerLoop).isAlive() and not gc.getPlayer(iPlayerLoop).isBarbarian()):
+            if (gc.getPlayer(iPlayerLoop).isAlive()
+                and not gc.getPlayer(iPlayerLoop).isBarbarian()
+                and not gc.getPlayer(iPlayerLoop).isWatchingCiv()
+                ):
 
                 iNumActivePlayers += 1
 
@@ -1427,6 +1440,8 @@ class CvInfoScreen:
         # Calculate the top 5 cities
 
         for iPlayerLoop in range(gc.getMAX_PLAYERS()):
+            if gc.getPlayer(iPlayerLoop).isWatchingCiv():
+                continue
 
             apCityList = PyPlayer(iPlayerLoop).getCityList()
 
@@ -1857,7 +1872,7 @@ class CvInfoScreen:
             iPlayerTeam = pPlayer.getTeam()
 
             # No barbs and only display national wonders for the active player's team
-            if (pPlayer and not pPlayer.isBarbarian() and ((self.szWonderDisplayMode != "National Wonders") or (iPlayerTeam == gc.getTeam(gc.getPlayer(self.iActivePlayer).getTeam()).getID()))):
+            if (pPlayer and not pPlayer.isBarbarian() and not pPlayer.isWatchingCiv() and ((self.szWonderDisplayMode != "National Wonders") or (iPlayerTeam == gc.getTeam(gc.getPlayer(self.iActivePlayer).getTeam()).getID()))):
 
                 # Loop through this player's cities and determine if they have any wonders to display
                 apCityList = PyPlayer(iPlayerLoop).getCityList()
@@ -1951,7 +1966,7 @@ class CvInfoScreen:
                     aiTeamsUsed.append(iTeamLoop)
                     pTeam = gc.getTeam(iTeamLoop)
 
-                    if (pTeam.isAlive() and not pTeam.isBarbarian()):
+                    if (pTeam.isAlive() and not pTeam.isBarbarian() and not pTeam.isWatchingCiv()):
 
                         # Loop through projects
                         for iProjectLoop in range(gc.getNumProjectInfos()):

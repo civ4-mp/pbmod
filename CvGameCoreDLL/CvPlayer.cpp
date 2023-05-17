@@ -150,7 +150,7 @@ void CvPlayer::init(PlayerTypes eID)
 
 		if (GC.getGameINLINE().isOption(GAMEOPTION_RANDOM_PERSONALITIES))
 		{
-			if (!isBarbarian() && !isMinorCiv())
+			if (!isBarbarian() && !isMinorCiv() && !isWatchingCiv())
 			{
 				iBestValue = 0;
 				eBestPersonality = NO_LEADER;
@@ -471,6 +471,7 @@ void CvPlayer::reset(PlayerTypes eID, bool bConstructorCall)
 	m_uiStartTime = 0;
 
 	m_bAlive = false;
+	m_bWatchingCiv = false;
 	m_bEverAlive = false;
 	m_bTurnActive = false;
 	m_bAutoMoves = false;
@@ -3512,6 +3513,11 @@ bool CvPlayer::canContact(PlayerTypes ePlayer) const
 	}
 
 	if (isMinorCiv() || GET_PLAYER(ePlayer).isMinorCiv())
+	{
+		return false;
+	}
+
+	if (isWatchingCiv() || GET_PLAYER(ePlayer).isWatchingCiv())
 	{
 		return false;
 	}
@@ -9524,12 +9530,36 @@ bool CvPlayer::isMinorCiv() const
 	return GC.getInitCore().getMinorNationCiv(m_eID);
 }
 
+bool CvPlayer::isWatchingCiv() const
+{
+	return m_bWatchingCiv;
+}
+
 
 bool CvPlayer::isAlive() const
 {
 	return m_bAlive;
 }
 
+void CvPlayer::setWatchingCiv(bool bNewValue)
+{
+	if (m_bWatchingCiv == bNewValue) return;
+
+	// Enable/Disable  War/Peace  pinning with each nation
+	TeamTypes eTeam = getTeam();
+	for (int iI = 0; iI < MAX_TEAMS; iI++)
+	{
+		if ((iI != eTeam))
+		{
+			if (GET_TEAM((TeamTypes)iI).isAlive())
+			{
+				GET_TEAM((TeamTypes)iI).setPermanentWarPeace(eTeam, bNewValue);
+			}
+		}
+	}
+
+	m_bWatchingCiv = bNewValue;
+}
 
 bool CvPlayer::isEverAlive() const
 {
@@ -9774,6 +9804,18 @@ void CvPlayer::setTurnActive(bool bNewValue, bool bDoTurn)
 				}
 
 				gDLL->getInterfaceIFace()->setDirty(SelectionCamera_DIRTY_BIT, true);
+			}
+
+			// Immideatly end turn for watcher civ
+			// In sequential mode you has to end the turn by hand ATM.
+			if (GC.getGameINLINE().isNetworkMultiPlayer()){
+				if (isWatchingCiv()){
+					if (GC.getGameINLINE().isMPOption(MPOPTION_SIMULTANEOUS_TURNS)){
+						{
+							setTurnActive(false, bDoTurn);
+						}
+					}
+				}
 			}
 		}
 		else
@@ -12797,7 +12839,9 @@ int CvPlayer::getEspionageSpending(TeamTypes eAgainstTeam) const
 		{
 			if (GET_TEAM((TeamTypes)iLoop).isAlive())
 			{
-				if (GET_TEAM(getTeam()).isHasMet((TeamTypes)iLoop))
+				if (GET_TEAM(getTeam()).isHasMet((TeamTypes)iLoop)
+						&& !GET_TEAM((TeamTypes)iLoop).isWatchingCiv())
+
 				{
 					if (iLoop == int(eAgainstTeam))
 					{
@@ -12832,7 +12876,8 @@ int CvPlayer::getEspionageSpending(TeamTypes eAgainstTeam) const
 			{
 				if (GET_TEAM((TeamTypes)iLoop).isAlive())
 				{
-					if (GET_TEAM(getTeam()).isHasMet((TeamTypes)iLoop))
+					if (GET_TEAM(getTeam()).isHasMet((TeamTypes)iLoop)
+						&& !GET_TEAM((TeamTypes)iLoop).isWatchingCiv())
 					{
 						int iChange = (iTotalPoints * getEspionageSpendingWeightAgainstTeam((TeamTypes)iLoop) / iTotalWeight);
 						iAvailablePoints -= iChange;
@@ -12854,7 +12899,8 @@ int CvPlayer::getEspionageSpending(TeamTypes eAgainstTeam) const
 		{
 			if (getTeam() != iLoop)
 			{
-				if (GET_TEAM((TeamTypes)iLoop).isAlive())
+				if (GET_TEAM((TeamTypes)iLoop).isAlive() 
+						&& !GET_TEAM((TeamTypes)iLoop).isWatchingCiv())
 				{
 					if (GET_TEAM(getTeam()).isHasMet((TeamTypes)iLoop))
 					{
@@ -15766,6 +15812,7 @@ void CvPlayer::read(FDataStreamBase* pStream)
 	pStream->Read(&m_bExtendedGame);
 	pStream->Read(&m_bFoundedFirstCity);
 	pStream->Read(&m_bStrike);
+	pStream->Read(&m_bWatchingCiv);
 
 	pStream->Read((int*)&m_eID);
 	pStream->Read((int*)&m_ePersonalityType);
@@ -16229,6 +16276,7 @@ void CvPlayer::write(FDataStreamBase* pStream)
 	pStream->Write(m_bExtendedGame);
 	pStream->Write(m_bFoundedFirstCity);
 	pStream->Write(m_bStrike);
+	pStream->Write(m_bWatchingCiv);
 
 	pStream->Write(m_eID);
 	pStream->Write(m_ePersonalityType);
@@ -18543,7 +18591,7 @@ void CvPlayer::doEvents()
 		return;
 	}
 
-	if (isBarbarian() || isMinorCiv())
+	if (isBarbarian() || isMinorCiv() || isWatchingCiv())
 	{
 		return;
 	}

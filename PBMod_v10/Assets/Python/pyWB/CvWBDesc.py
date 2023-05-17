@@ -647,6 +647,7 @@ class CvPlayerDesc:
         self.artStyle = "NONE"
         self.isPlayableCiv = 1
         self.isMinorNationCiv = 0
+        self.isWatchingCiv = 0
         self.iStartingGold = 0
         self.iStartingX = -1
         self.iStartingY = -1
@@ -736,6 +737,7 @@ class CvPlayerDesc:
             f.write("\tArtStyle=%s\n" %(gc.getArtStyleTypes(pPlayer.getArtStyleType())))
             f.write("\tPlayableCiv=%d\n" %(int(pPlayer.isPlayable())))
             f.write("\tMinorNationStatus=%d\n" %(pPlayer.isMinorCiv()))
+            f.write("\tWatchingCiv=%d\n" %(pPlayer.isWatchingCiv()))
             f.write("\tStartingGold=%d\n" %(pPlayer.getGold()))
 
             if pPlayer.isAlive():
@@ -878,6 +880,11 @@ class CvPlayerDesc:
                 v = parser.findTokenValue(toks, "MinorNationStatus")
                 if v!=-1:
                     self.isMinorNationCiv = int(v)
+                    continue
+
+                v = parser.findTokenValue(toks, "WatchingCiv")
+                if v!=-1:
+                    self.isWatchingCiv = int(v)
                     continue
 
                 v = parser.findTokenValue(toks, "StartingGold")
@@ -2353,6 +2360,12 @@ class CvWBDesc:
             for iTeamLoop in pWBPlot.abTeamPlotRevealed:
                 pPlot = CyMap().plot(pWBPlot.iX, pWBPlot.iY)
                 pPlot.setRevealed(iTeamLoop, True, False, TeamTypes.NO_TEAM)
+
+        # WatchingCiv
+        for iPlayerLoop in xrange(len(self.playersDesc)):
+            pPlayer = gc.getPlayer(iPlayerLoop)
+            pWBPlayer = self.playersDesc[iPlayerLoop]
+            pPlayer.setWatchingCiv(pWBPlayer.isWatchingCiv == 1)
 
         # units
         for pDesc in self.plotDesc:

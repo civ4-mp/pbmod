@@ -132,5 +132,7 @@ New in version 10 (PBMod_v10, 2022)
   • Fix resource double spending bug in gc.sendTurnInCompletePB(iPlayer) function.
   • Allow change of players/teams in movement order of sequencial game.
     E.g. you can swap player 0 and 1 by
-      CyGame().swapTeamsInTurnOrder(0,1)
-
+    CyGame().swapTeamsInTurnOrder(0,1)
+  • Observer mode: Add 'WatchingCiv=1' to player in szenario file or call
+    gc.getPlayer(XXX).setWatchingCiv(True) to enable observer civ.
+    This nation will not be displayed in Adivisors, etc. and can explore the map.
