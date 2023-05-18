@@ -39,7 +39,7 @@ class ModSelectPage(wx.wizard.PyWizardPage):
 
         pageSizer = wx.BoxSizer(wx.VERTICAL)
 
-        modPanel = wx.lib.scrolledpanel.ScrolledPanel(self, -1, size=(300, 600), style=wx.SUNKEN_BORDER)
+        modPanel = wx.lib.scrolledpanel.ScrolledPanel(self, -1, size=(300, 1000), style=wx.SUNKEN_BORDER)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         header = wx.StaticText(self, -1, LT.getText("TXT_KEY_PITBOSS_CHOOSE_MOD", ()))
@@ -48,12 +48,13 @@ class ModSelectPage(wx.wizard.PyWizardPage):
         # Place the radio buttons
         self.currentMod = 0
         self.rbs = []
+        entry_dist = 0
 
         # First choice is no mod
         self.rbs.append(wx.RadioButton(
             modPanel, -1, LT.getText("TXT_KEY_MAIN_MENU_NONE", ()), wx.DefaultPosition, wx.DefaultSize, wx.RB_GROUP
             ))
-        sizer.Add(self.rbs[0], 0, wx.ALL, 3)
+        sizer.Add(self.rbs[0], 0, wx.ALL, entry_dist)
 
         if PB.getModName() == "":
             self.rbs[0].SetValue(True)
@@ -63,11 +64,13 @@ class ModSelectPage(wx.wizard.PyWizardPage):
             self.rbs.append(wx.RadioButton(
                 modPanel, -1, PB.getModAt(index), wx.DefaultPosition, wx.DefaultSize
                 ))
-            sizer.Add(self.rbs[index+1], 0, wx.ALL, 3)
+            sizer.Add(self.rbs[index+1], 0, wx.ALL, entry_dist)
 
             if PB.isCurrentMod(index):
                 self.currentMod = index+1
                 self.rbs[index+1].SetValue(True)
+
+            #if index == 10: break
 
         modPanel.SetSizer(sizer)
         modPanel.SetAutoLayout(1)
