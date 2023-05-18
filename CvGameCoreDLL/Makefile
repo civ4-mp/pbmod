@@ -3,13 +3,27 @@
 #########################################
 # Debug: magic function: 479A70
 
+## Default setup, add your local changes into Makefile.includes
 #### Paths ####
-#TOOLKIT=C:\Programme\Microsoft Visual C++ Toolkit 2003
-TOOLKIT=I:\Civ4\Microsoft Visual C++ Toolkit 2003
-#PSDK=C:\Programme\Microsoft SDKs\Windows\v7.0A
-PSDK=I:\Civ4\WinSdk
-## Uncomment to have newly compiled dlls copied to your mod's Assets directory
-YOURMOD=H:\Firaxis Games\Sid Meier's Civilization 4\Beyond the Sword\Mods\PB Mod_v9
+TOOLKIT=$(PROGRAMFILES)\Microsoft Visual C++ Toolkit 2003
+PSDK=$(PROGRAMFILES)\Microsoft SDKs\Windows\v7.0A
+YOURMOD=I:\Olaf\Civ4\Beyond the Sword\Mods\PBMod_v10
+
+#### Mod releated stuff ####
+# Store output in [YOURMOD]\DLLs instead of [YOURMOD]\Assets
+USE_DLLS_FOLDER=0
+
+# Enable changes required for 'pbmod'
+#   1. Add some boost *.obj files (difficult to compile them from scratch).
+#   2. Change compiler flag Oy- (Allows detection of parent function)
+#   3. Linker adds /DEF:Updater.def (Map getActivePlayer to getActivePlayerExternal)
+PBMOD=1
+
+# Load local changes of setup
+!IF EXIST(Makefile.includes)
+!INCLUDE Makefile.includes
+!ENDIF
+
 
 #### Tools ####
 CC="$(TOOLKIT)\bin\cl.exe"
@@ -18,6 +32,7 @@ LD="$(TOOLKIT)\bin\link.exe"
 RC="$(PSDK)\bin\rc.exe"
 ## Uncomment to build dependencies using fastdep
 FD="$(MAKEDIR)\bin\fastdep.exe"
+
 
 #### BLACKLIST ####
 ## Uncomment to block CvTextScreen (accidentally included by Firaxis)
@@ -51,10 +66,17 @@ Debug_OTHER=Debug\CvGameCoreDLL.exp Debug\CvGameCoreDLL.ilk
 Release_OTHER=Release\CvGameCoreDLL.exp
 
 #### CFLAGS ####
+# For release and debug build
+!IF "$(USE_DLLS_FOLDER)" != "1"
+DUMMY_DLL_FLAGS=/DWITHOUT_EXTERNAL_DLLS
+!ELSE
+DUMMY_DLL_FLAGS=
+!ENDIF
+
 GLOBAL_CFLAGS=/GR /Gy /W3 /EHsc /Gd /Gm- /DWIN32 /D_WINDOWS /D_USRDLL /DCVGAMECOREDLL_EXPORTS /Yu"CvGameCoreDLL.h"
-Debug_CFLAGS=/MD /Zi /Od /D_DEBUG /RTC1 /Fp"$(Debug_PCH)" $(GLOBAL_CFLAGS)
-#Release_CFLAGS=/MD /O2 /Oy /Oi /G7 /DNDEBUG /DFINAL_RELEASE /Fp"$(Release_PCH)" $(GLOBAL_CFLAGS)
-Release_CFLAGS=/MD /O2 /Oy- /Oi /G7 /DNDEBUG /DFINAL_RELEASE /Fp"$(Release_PCH)" $(GLOBAL_CFLAGS)
+Debug_CFLAGS=/MD /Zi /Od /D_DEBUG $(DUMMY_DLL_FLAGS) /RTC1 /Fp"$(Debug_PCH)" $(GLOBAL_CFLAGS)
+
+Release_CFLAGS=/MD /O2 $(PBMOD_FLAGS) /Oi /G7 /DNDEBUG /DFINAL_RELEASE $(DUMMY_DLL_FLAGS) /Fp"$(Release_PCH)" $(GLOBAL_CFLAGS)
 
 
 #### LDFLAGS ####
@@ -70,9 +92,14 @@ Release_INCS=$(PROJECT_INCS) $(GLOBAL_INCS)
 
 #### LIBS ####
 GLOBAL_LIBS=/LIBPATH:"$(TOOLKIT)/lib" /LIBPATH:"$(PSDK)/Lib" winmm.lib user32.lib
+
+!IF "$(PBMOD)" != "1"
+PROJECT_LIBS=/LIBPATH:Python24/libs /LIBPATH:boost-1.32.0/libs/ boost_python-vc71-mt-1_32.lib 
+!ELSE
 PROJECT_LIBS=/LIBPATH:Python24/libs /LIBPATH:boost-1.32.0/libs/ boost_python-vc71-mt-1_32.lib \
 	thread.obj exceptions.obj condition.obj xtime.obj mutex.obj once.obj \
-	recursive_mutex.obj read_write_mutex.obj tss_hooks.obj
+  recursive_mutex.obj read_write_mutex.obj tss_hooks.obj
+!ENDIF
 
 Debug_LIBS=$(PROJECT_LIBS) $(GLOBAL_LIBS) msvcprt.lib
 Release_LIBS=$(PROJECT_LIBS) $(GLOBAL_LIBS)
@@ -117,12 +144,20 @@ Release_clean:
 
 Debug: Debug_DIR Debug_unfinished $(Debug_PCH) $(Debug_BIN)
 !IFDEF YOURMOD
+!IF "$(USE_DLLS_FOLDER)" != "1"
 	-COPY "$(Debug_BIN)" "$(YOURMOD)\Assets\."
+!ELSE
+	-COPY "$(Debug_BIN)" "$(YOURMOD)\DLLs\."
+!ENDIF
 !ENDIF
 
 Release: Release_DIR Release_unfinished $(Release_PCH) $(Release_BIN)
 !IFDEF YOURMOD
+!IF "$(USE_DLLS_FOLDER)" != "1"
 	-COPY "$(Release_BIN)" "$(YOURMOD)\Assets\."
+!ELSE
+	-COPY "$(Release_BIN)" "$(YOURMOD)\DLLs\."
+!ENDIF
 !ENDIF
 
 Debug_DIR:
@@ -146,10 +181,18 @@ Release_unfinished:
 		@IF EXIST "Release\%i" DEL "Release\%i"
 
 $(Debug_BIN): $(Debug_LINKOBJS) $(Debug_RESOURCE)
+!IF "$(PBMOD)" != "1"
+	$(LD) /out:$(Debug_BIN) $(Debug_LDFLAGS) $(Debug_LIBS) $(Debug_LINKOBJS) $(Debug_RESOURCE)
+!ELSE
 	$(LD) /DEF:Updater.def /out:$(Debug_BIN) $(Debug_LDFLAGS) $(Debug_LIBS) $(Debug_LINKOBJS) $(Debug_RESOURCE)
+!ENDIF
 
 $(Release_BIN): $(Release_LINKOBJS) $(Release_RESOURCE)
+!IF "$(PBMOD)" != "1"
+	$(LD) /out:$(Release_BIN) $(Release_LDFLAGS) $(Release_LIBS) $(Release_LINKOBJS) $(Release_RESOURCE)
+!ELSE
 	$(LD) /DEF:Updater.def /out:$(Release_BIN) $(Release_LDFLAGS) $(Release_LIBS) $(Release_LINKOBJS) $(Release_RESOURCE)
+!ENDIF
 
 .cpp{Debug}.obj:
 	@ECHO.>"$*.obj.@"
@@ -158,7 +201,11 @@ $(Release_BIN): $(Release_LINKOBJS) $(Release_RESOURCE)
 
 .cpp{Release}.obj:
 	@ECHO.>"$*.obj.@"
-    $(CPP) /nologo $(Release_CFLAGS) $(Release_INCS) /Fo$*.obj /c $<
+!IF "$(PBMOD)" != "1" && "$($<)" = "CvInitCore.cpp"
+    $(CPP) /nologo $(Release_CFLAGS) /Oy- $(Release_INCS) /Fo$*.obj /c $<
+!ELSE
+    $(CPP) /nologo $(Release_CFLAGS) /Oy $(Release_INCS) /Fo$*.obj /c $<
+!ENDIF
 	@DEL "$*.obj.@"
 
 $(Debug_PCH) Debug\_precompile.obj:

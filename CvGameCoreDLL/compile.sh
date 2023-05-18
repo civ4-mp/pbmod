@@ -141,23 +141,13 @@ done
 
 #Set flags for compilation
 GLOBAL_CFLAGS="/MD /nologo /GR /Gy /W3 /EHsc /Gd /Gm- /DWIN32 /D_WINDOWS /D_USRDLL /DCVGAMECOREDLL_EXPORTS /YuCvGameCoreDLL.h /c /Fp$PCH"
-if [ "$PBMOD_BUILD" = "1" ] ; then
-	# /Oy => /Oy-
-	if test "$TARGET" = "Release"; then
-		set -- "/O2" "/Oy-" "/Oi" "/G7" "/DNDEBUG" "/DFINAL_RELEASE" $GLOBAL_CFLAGS
-	elif test "$TARGET" = "Final_release"; then
-		set -- "/O2" "/Oy-" "/Oi" "/G7" "/DNDEBUG" "/DFINAL_RELEASE" "/GL" $GLOBAL_CFLAGS
-	elif test "$TARGET" = "Debug"; then
-		set -- "/Z7" "/Od" "/D_DEBUG" "/RTC1" $GLOBAL_CFLAGS
-	fi
-else
-	if test "$TARGET" = "Release"; then
-		set -- "/O2" "/Oy" "/Oi" "/G7" "/DNDEBUG" "/DFINAL_RELEASE" $GLOBAL_CFLAGS
-	elif test "$TARGET" = "Final_release"; then
-		set -- "/O2" "/Oy" "/Oi" "/G7" "/DNDEBUG" "/DFINAL_RELEASE" "/GL" $GLOBAL_CFLAGS
-	elif test "$TARGET" = "Debug"; then
-		set -- "/Z7" "/Od" "/D_DEBUG" "/RTC1" $GLOBAL_CFLAGS
-	fi
+# Removed /Oy Argument. This, /Oy, or /Oy- will be added later
+if test "$TARGET" = "Release"; then
+	set -- "/O2" "/Oi" "/G7" "/DNDEBUG" "/DFINAL_RELEASE" $GLOBAL_CFLAGS
+elif test "$TARGET" = "Final_release"; then
+	set -- "/O2" "/Oi" "/G7" "/DNDEBUG" "/DFINAL_RELEASE" "/GL" $GLOBAL_CFLAGS
+elif test "$TARGET" = "Debug"; then
+	set -- "/Z7" "/Od" "/D_DEBUG" "/RTC1" $GLOBAL_CFLAGS
 fi
 
 #Generate precompiled header
@@ -175,6 +165,13 @@ if $PARALLEL; then
 	PIDS=""
 	for COMPILEFILE in *.cpp; do
 		ci=$(($ci+1))
+		if [ "$PBMOD_BUILD" = "1" -a "$COMPILEFILE" = "CvInitCore.cpp" ] ; then
+			echo "Keep frame pointer (/Oy-) in $COMPILEFILE"
+			set -- "/Oy-" "$@"
+		else
+			echo "Add /Oy $COMPILEFILE"
+			set -- "/Oy" "$@"
+		fi
 		if test "$COMPILEFILE" != "_precompile.cpp"; then
 			(
 			if should_compile "$COMPILEFILE" $ci; then
