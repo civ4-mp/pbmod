@@ -1194,7 +1194,7 @@ int CvMapGenerator::calculateNumBonusesToAdd(BonusTypes eBonusType)
 		iLandTiles += (iNumPossible / pBonusInfo.getTilesPer());
 	}
 
-	int iPlayers = (GC.getGameINLINE().countCivPlayersAlive() * pBonusInfo.getPercentPerPlayer()) / 100;
+	int iPlayers = (GC.getGameINLINE().countCivPlayersAlive(true) * pBonusInfo.getPercentPerPlayer()) / 100;
 	int iBonusCount = (iBaseCount * (iLandTiles + iPlayers)) / 100;
 	iBonusCount = std::max(1, iBonusCount);
 	return iBonusCount;

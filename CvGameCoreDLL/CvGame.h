@@ -116,7 +116,7 @@ public:
 	void clearSecretaryGeneral(VoteSourceTypes eVoteSource);
 	void updateSecretaryGeneral();
 
-	DllExport int countCivPlayersAlive() const;																		// Exposed to Python
+	DllExport int countCivPlayersAlive(bool bSkipObservers = false) const;																		// Exposed to Python
 	DllExport int countCivPlayersEverAlive() const;																// Exposed to Python
 	DllExport int countCivTeamsAlive() const;																			// Exposed to Python
 	DllExport int countCivTeamsEverAlive() const;																	// Exposed to Python

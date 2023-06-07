@@ -2901,7 +2901,7 @@ void CvGame::updateSecretaryGeneral()
 	}
 }
 
-int CvGame::countCivPlayersAlive() const
+int CvGame::countCivPlayersAlive(bool bSkipObservers) const
 {
 	int iCount = 0;
 
@@ -2909,13 +2909,15 @@ int CvGame::countCivPlayersAlive() const
 	{
 		if (GET_PLAYER((PlayerTypes)iI).isAlive())
 		{
+			if (bSkipObservers && GET_PLAYER((PlayerTypes)iI).isWatchingCiv()){
+				continue;
+			}
 			iCount++;
 		}
 	}
 
 	return iCount;
 }
-
 
 int CvGame::countCivPlayersEverAlive() const
 {
@@ -6178,7 +6180,7 @@ void CvGame::createBarbarianCities()
 		return;
 	}
 
-	if (getNumCivCities() < (countCivPlayersAlive() * 2))
+	if (getNumCivCities() < (countCivPlayersAlive(true) * 2))
 	{
 		return;
 	}
@@ -6303,7 +6305,7 @@ void CvGame::createBarbarianUnits()
 		bAnimals = true;
 	}
 
-	if (getNumCivCities() < ((countCivPlayersAlive() * 3) / 2) && !isOption(GAMEOPTION_ONE_CITY_CHALLENGE))
+	if (getNumCivCities() < ((countCivPlayersAlive(true) * 3) / 2) && !isOption(GAMEOPTION_ONE_CITY_CHALLENGE))
 	{
 		bAnimals = true;
 	}
@@ -6486,7 +6488,7 @@ void CvGame::createAnimals()
 		return;
 	}
 
-	if (getNumCivCities() < countCivPlayersAlive())
+	if (getNumCivCities() < countCivPlayersAlive(true))
 	{
 		return;
 	}
@@ -6891,7 +6893,7 @@ bool CvGame::testVictory(VictoryTypes eVictory, TeamTypes eTeam, bool* pbEndScor
 		{
 			bool bFound = false;
 
-			if (getNumCivCities() > (countCivPlayersAlive() * 2))
+			if (getNumCivCities() > (countCivPlayersAlive(true) * 2))
 			{
 				for (int iK = 0; iK < GC.getNumReligionInfos(); iK++)
 				{
