@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # Installation/Setup:
@@ -63,12 +63,16 @@ RESTART_TIMEOUT = 3
 START_WINDOWS = '{CIV4BTS_EXE} mod= "{MOD}"\\" /ALTROOT={ALTROOT}"'
 START_LINUX = 'wine "{CIV4BTS_EXE}" mod= "{MOD}"\\\" /ALTROOT="{ALTROOT_W}"'
 
-# Update command (For mods with ModUpdater.py)
-# Note that this script needs Python2 because it is used inside of Civ4, too.
-# Syntax is not compatible with Python3.
-UPDATE_WINDOWS = 'python2 {SCRIPT} {ARGS}'
-UPDATE_LINUX = 'python2 {SCRIPT} {ARGS}'
-UPDATE_SCRIPT = 'ModUpdater.py'
+# Update command for mods including ModUpdater.py(3)
+# Note that ModUpdater.py needs Python2 because this file is used inside of Civ4
+# and has to be compatible with Python2.4.
+# ModUpdater.py3 can be used with Python3.
+UPDATE_WINDOWS2 = 'python2 {SCRIPT} {ARGS}'
+UPDATE_LINUX2 = 'python2 {SCRIPT} {ARGS}'
+UPDATE_SCRIPT2 = 'ModUpdater.py'
+UPDATE_WINDOWS3 = 'python3 {SCRIPT} {ARGS}'
+UPDATE_LINUX3 = 'python3 {SCRIPT} {ARGS}'
+UPDATE_SCRIPT3 = 'ModUpdater.py3'
 
 # Variant with cleaned output
 UNBUFFER = False
@@ -744,13 +748,21 @@ def prepare_update(gameid, pbSettings, mod_name):
     cur_folder = os.curdir
     mod_folder = os.path.join(CIV4BTS_PATH, "Mods", mod_name)
     script_rel_path = os.path.join("Assets", "Python", "Extras",
-                                   UPDATE_SCRIPT)
-    if os.path.sep == "\\":  # Windows
-        update_cmd = UPDATE_WINDOWS.format(
-            SCRIPT=script_rel_path,
-            ARGS="--force" if isForcedAutostart(pbSettings) else "")
+                                   UPDATE_SCRIPT3)
+    if os.path.exists(os.path.join(mod_folder, script_rel_path)):
+        if os.path.sep == "\\":  # Windows
+            update_cmd = UPDATE_WINDOWS3
+        else:
+            update_cmd = UPDATE_LINUX3
     else:
-        update_cmd = UPDATE_LINUX.format(
+        script_rel_path = os.path.join("Assets", "Python", "Extras",
+                                   UPDATE_SCRIPT2)
+        if os.path.sep == "\\":  # Windows
+            update_cmd = UPDATE_WINDOWS2
+        else:
+            update_cmd = UPDATE_LINUX2
+
+    update_cmd = update_cmd.format(
             SCRIPT=script_rel_path,
             ARGS="--force" if isForcedAutostart(pbSettings) else "")
 
