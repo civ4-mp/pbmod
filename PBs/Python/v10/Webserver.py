@@ -368,12 +368,14 @@ class PerpetualTimer:
             inconsistentState = CvEventInterface.getEventManager(
             ).bGameTurnProcessing
         except AttributeError:
+            nobody_active = True
             for iPlayer in range(gc.getMAX_CIV_PLAYERS()):
                 if gc.getPlayer(iPlayer).isTurnActive():
+                    nobody_active = False
                     break
 
-                # no Player active => game turn processing
-                inconsistentState = True
+            # no Player active => game turn processing
+            inconsistentState = nobody_active
         except:
             pass
 

@@ -35,7 +35,7 @@ errorLogFile = PbSettings.get("errorLogFile", None)
 if errorLogFile is not None:
     logName = os.path.join(gc.getAltrootDir(), str(errorLogFile))
     try:
-        os.unlink(logName, logName+".old")
+        os.unlink(logName+".old")
     except Exception, e:
         pass
     try:

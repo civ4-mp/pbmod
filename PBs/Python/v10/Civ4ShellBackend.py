@@ -142,7 +142,6 @@ class Server:
             if data[0:2] in ["P:","p:"]:  # Call code
                 # Made some objects available for easier debugging
                 glob["adminFrame"] = self.adminFrame
-                glob["adminFrame"] = self.adminFrame
                 glob["adminApp"] = self.adminApp
 
                 # Execute input
