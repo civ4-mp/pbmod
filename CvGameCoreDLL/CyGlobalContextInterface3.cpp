@@ -21,6 +21,7 @@ void CyGlobalContextPythonInterface3(python::class_<CyGlobalContext>& x)
 		.def("getMemoryInfo", &CyGlobalContext::getMemoryInfo, python::return_value_policy<python::reference_existing_object>(), "CvInfoBase* (int i)")
 
 		.def("getNumPlayerOptionInfos", &CyGlobalContext::getNumPlayerOptionInfos)
+		.def("getNumPlayerOptionInfosExtended", &CyGlobalContext::getNumPlayerOptionInfosExtended)
 		.def("getPlayerOptionsInfo", &CyGlobalContext::getPlayerOptionsInfoByIndex, python::return_value_policy<python::reference_existing_object>(), "CvPlayerOptionInfo* (int i) - PlayerOptionsInfo for PlayerOptionsInfo")
 		.def("getPlayerOptionsInfoByIndex", &CyGlobalContext::getPlayerOptionsInfoByIndex, python::return_value_policy<python::reference_existing_object>(), "CvPlayerOptionInfo* (int i) - PlayerOptionsInfo for PlayerOptionsInfo")
 

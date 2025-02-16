@@ -868,6 +868,7 @@ public:
 	DllExport int getNumControlInfos() const;
 	DllExport int getNumMissionInfos() const;
 	DllExport int getNumPlayerOptionInfos() const;
+	DllExport int getNumPlayerOptionInfosExtended() const;
 	DllExport int getMaxNumSymbols() const;
 	DllExport int getNumGraphicLevels() const;
 	DllExport int getNumGlobeLayers() const;
@@ -1225,6 +1226,7 @@ inline CvGlobals& CvGlobals::getInstance()
 #define NUM_CONTROL_TYPES (GC.getNumControlInfos())
 #define NUM_MISSION_TYPES (GC.getNumMissionInfos())
 #define NUM_PLAYEROPTION_TYPES (GC.getNumPlayerOptionInfos())
+#define NUM_PLAYEROPTION_TYPES_EXTENDED (GC.getNumPlayerOptionInfosExtended())
 #define MAX_NUM_SYMBOLS (GC.getMaxNumSymbols())
 #define NUM_GRAPHICLEVELS (GC.getNumGraphicLevels())
 #define NUM_GLOBE_LAYER_TYPES (GC.getNumGlobeLayers())

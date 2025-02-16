@@ -138,5 +138,65 @@
 			<Help>TXT_KEY_PLAYER_OPTION_MODDER_3_HELP</Help>
 			<bDefault>0</bDefault>
 		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_0</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_0</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_0_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_1</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_1</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_1_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_2</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_2</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_1_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_3</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_3</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_3_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_4</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_4</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_4_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_5</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_5</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_5_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_6</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_6</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_6_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_7</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_7</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_7_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_8</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_8</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_8_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
+		<PlayerOptionInfo>
+			<Type>PLAYEROPTION_EXTENDED_9</Type>
+			<Description>TXT_KEY_PLAYER_OPTION_EXTENDED_9</Description>
+			<Help>TXT_KEY_PLAYER_OPTION_EXTENDED_9_HELP</Help>
+			<bDefault>0</bDefault>
+		</PlayerOptionInfo>
 	</PlayerOptionInfos>
 </Civ4PlayerOptionInfos>

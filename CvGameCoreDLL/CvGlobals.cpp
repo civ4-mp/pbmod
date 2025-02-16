@@ -1676,7 +1676,7 @@ std::vector<CvPlayerOptionInfo*>& CvGlobals::getPlayerOptionInfo()
 CvPlayerOptionInfo& CvGlobals::getPlayerOptionInfo(PlayerOptionTypes ePlayerOptionNum)
 {
 	FAssert(ePlayerOptionNum >= 0);
-	FAssert(ePlayerOptionNum < NUM_PLAYEROPTION_TYPES);
+	FAssert(ePlayerOptionNum < NUM_PLAYEROPTION_TYPES_EXTENDED);
 	return *(m_paPlayerOptionInfos[ePlayerOptionNum]);
 }
 
@@ -3541,6 +3541,7 @@ int CvGlobals::getNumCommandInfos() const { return NUM_COMMAND_TYPES; }
 int CvGlobals::getNumControlInfos() const { return NUM_CONTROL_TYPES; }
 int CvGlobals::getNumMissionInfos() const { return NUM_MISSION_TYPES; }
 int CvGlobals::getNumPlayerOptionInfos() const { return NUM_PLAYEROPTION_TYPES; }
+int CvGlobals::getNumPlayerOptionInfosExtended() const { return NUM_PLAYEROPTION_TYPES_EXTENDED; }
 int CvGlobals::getMaxNumSymbols() const { return MAX_NUM_SYMBOLS; }
 int CvGlobals::getNumGraphicLevels() const { return NUM_GRAPHICLEVELS; }
 int CvGlobals::getNumGlobeLayers() const { return NUM_GLOBE_LAYER_TYPES; }

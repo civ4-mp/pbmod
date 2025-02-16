@@ -2541,6 +2541,7 @@ DllExport bool CvXMLLoadUtility::LoadPlayerOptions()
 
 	LoadGlobalClassInfo(GC.getPlayerOptionInfo(), "CIV4PlayerOptionInfos", "GameInfo", "Civ4PlayerOptionInfos/PlayerOptionInfos/PlayerOptionInfo", false);
 	FAssert(GC.getNumPlayerOptionInfos() == NUM_PLAYEROPTION_TYPES);
+	FAssert(GC.getNumPlayerOptionInfosExtended() == NUM_PLAYEROPTION_TYPES_EXTENDED);
 
 	DestroyFXml();
 	return true;

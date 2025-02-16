@@ -205,6 +205,7 @@ public:
 	int getNumCityTabInfos() const { return GC.getNumCityTabInfos(); }
 	int getNumCalendarInfos() const { return GC.getNumCalendarInfos(); }
 	int getNumPlayerOptionInfos() const { return GC.getNumPlayerOptionInfos(); }
+	int getNumPlayerOptionInfosExtended() const { return GC.getNumPlayerOptionInfosExtended(); }
 	int getNumGameOptionInfos() const { return GC.getNumGameOptionInfos(); }
 	int getNumMPOptionInfos() const { return GC.getNumMPOptionInfos(); }
 	int getNumForceControlInfos() const { return GC.getNumForceControlInfos(); }

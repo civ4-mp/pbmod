@@ -54,7 +54,7 @@ CvPlayer::CvPlayer()
 	m_aiEspionageSpendingWeightAgainstTeam = new int[MAX_TEAMS];
 
 	m_abFeatAccomplished = new bool[NUM_FEAT_TYPES];
-	m_abOptions = new bool[NUM_PLAYEROPTION_TYPES];
+	m_abOptions = new bool[NUM_PLAYEROPTION_TYPES_EXTENDED];
 
 	m_paiBonusExport = NULL;
 	m_paiBonusImport = NULL;
@@ -548,7 +548,7 @@ void CvPlayer::reset(PlayerTypes eID, bool bConstructorCall)
 		m_abFeatAccomplished[iI] = false;
 	}
 
-	for (iI = 0; iI < NUM_PLAYEROPTION_TYPES; iI++)
+	for (iI = 0; iI < NUM_PLAYEROPTION_TYPES_EXTENDED; iI++)
 	{
 		m_abOptions[iI] = false;
 	}
@@ -10823,7 +10823,7 @@ void CvPlayer::setFeatAccomplished(FeatTypes eIndex, bool bNewValue)
 bool CvPlayer::isOption(PlayerOptionTypes eIndex) const
 {
 	FAssertMsg(eIndex >= 0, "eIndex is expected to be non-negative (invalid Index)");
-	FAssertMsg(eIndex < NUM_PLAYEROPTION_TYPES, "eIndex is expected to be within maximum bounds (invalid Index)");
+	FAssertMsg(eIndex < NUM_PLAYEROPTION_TYPES_EXTENDED, "eIndex is expected to be within maximum bounds (invalid Index)");
 	return m_abOptions[eIndex];
 }
 
@@ -10831,7 +10831,7 @@ bool CvPlayer::isOption(PlayerOptionTypes eIndex) const
 void CvPlayer::setOption(PlayerOptionTypes eIndex, bool bNewValue)
 {
 	FAssertMsg(eIndex >= 0, "eIndex is expected to be non-negative (invalid Index)");
-	FAssertMsg(eIndex < NUM_PLAYEROPTION_TYPES, "eIndex is expected to be within maximum bounds (invalid Index)");
+	FAssertMsg(eIndex < NUM_PLAYEROPTION_TYPES_EXTENDED, "eIndex is expected to be within maximum bounds (invalid Index)");
 	m_abOptions[eIndex] = bNewValue;
 }
 
@@ -15839,7 +15839,7 @@ void CvPlayer::read(FDataStreamBase* pStream)
 	pStream->Read(MAX_TEAMS, m_aiEspionageSpendingWeightAgainstTeam);
 
 	pStream->Read(NUM_FEAT_TYPES, m_abFeatAccomplished);
-	pStream->Read(NUM_PLAYEROPTION_TYPES, m_abOptions);
+	pStream->Read(NUM_PLAYEROPTION_TYPES_EXTENDED, m_abOptions);
 
 	pStream->ReadString(m_szScriptData);
 
@@ -16302,7 +16302,7 @@ void CvPlayer::write(FDataStreamBase* pStream)
 	pStream->Write(MAX_TEAMS, m_aiEspionageSpendingWeightAgainstTeam);
 
 	pStream->Write(NUM_FEAT_TYPES, m_abFeatAccomplished);
-	pStream->Write(NUM_PLAYEROPTION_TYPES, m_abOptions);
+	pStream->Write(NUM_PLAYEROPTION_TYPES_EXTENDED, m_abOptions);
 
 	pStream->WriteString(m_szScriptData);
 
